@@ -9,25 +9,17 @@ import tkinter as tk
 import customtkinter
 import logging
 import os
-import fitz
-import pikepdf
-import tempfile
 
 from tkcalendar import DateEntry
 from tkinter import ttk, filedialog
 from pathlib import Path
 from datetime import datetime
-from PIL import Image, ImageTk
-from utils.app_config import config
-from utils import msgbox
-from utils.msgbox import print_info
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 from pyhanko.sign import signers
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
-from reportlab.pdfgen import canvas as rcanvas
-from reportlab.lib.utils import ImageReader
 from pyhanko.pdf_utils.reader import PdfFileReader
+from utils.app_config import config
+from utils import msgbox
+from utils.pdf_overlay import overlay
 
 # logger modułu
 logger = logging.getLogger(__name__)
@@ -325,186 +317,40 @@ class PodpisApp:
         self.EntryFINAL_PDF.insert(0, new_path)
 
     def preview_pdf(self):
-        # sprawdzenie śceżki pliku
-        raw_path = Path(self.EntryORIG_PDF.get().strip())
-        print(raw_path)
-        if not raw_path:
-            msgbox.showwarning("Brak pliku", "Nie wybrano pliku PDF do podglądu.")
-            return
-        pdf_path = raw_path
-        if not pdf_path.exists():
+        orig_pdf = Path(self.EntryORIG_PDF.get().strip())
+
+        if not orig_pdf.exists():
             msgbox.showerror(
-                "Plik nie istnieje",
-                f"Wskazany plik nie istnieje:\n{pdf_path}"
-            )
-            return
-        elif not pdf_path.is_file():
-            msgbox.showerror(
-                "Nieprawidłowa ścieżka",
-                "Wskazana ścieżka nie jest plikiem."
-            )
-            return
-        elif pdf_path.suffix.lower() != ".pdf":
-            msgbox.showerror(
-                "Nieprawidłowy format",
-                "Wybrany plik nie jest dokumentem PDF."
+                "Błąd",
+                "Wybrany plik PDF nie istnieje."
             )
             return
 
-        self.doc = fitz.open(pdf_path)
-        self.page_index = 0
-        self.page_count = self.doc.page_count
+        try:
+            self._overlay = overlay(
+                parent=self.window,
+                pdf_path=orig_pdf,
+                logo_path=self.EntryLogo.get(),
+                comment=self.EntryComment.get(),
+                label_coord = self.LabelCoord,
+                on_done=self._on_overlay_ready,
+            )
+            self._overlay.preview_pdf()
 
-        self.preview = tk.Toplevel(self.window)
-        self.preview.title("Podgląd PDF")
+        except Exception as e:
+            msgbox.showerror(
+                "Błąd podglądu PDF",
+                str(e)
+            )
 
-        self.canvas = tk.Canvas(self.preview)
-        self.canvas.pack()
-
-        btn_frame = tk.Frame(self.preview)
-        btn_frame.pack(pady=5)
-
-        tk.Button(btn_frame, text="⟵ Poprzednia", command=self.prev_page).pack(
-            side="left", padx=5
-        )
-
-        tk.Button(btn_frame, text="Następna ⟶", command=self.next_page).pack(
-            side="left", padx=5
-        )
-
-        self.coordinations = {}
-
-        self.render_page()
-        self.canvas.bind("<Button-1>", self.click_event)
-
-    def render_page(self):
-        page = self.doc[self.page_index]
-        self.pix = page.get_pixmap()
-        img = Image.frombytes(
-            "RGB", [self.pix.width, self.pix.height], self.pix.samples
-        )
-
-        self.preview_img = ImageTk.PhotoImage(img)
-
-        self.canvas.config(width=self.pix.width, height=self.pix.height)
-        self.canvas.delete("all")
-        self.canvas.create_image(0, 0, anchor="nw", image=self.preview_img)
-
-        self.preview.title(
-            f"Podgląd PDF – strona {self.page_index + 1}/{self.page_count}"
-        )
-
-    def next_page(self):
-        if self.page_index < self.page_count - 1:
-            self.page_index += 1
-            self.render_page()
-
-    def prev_page(self):
-        if self.page_index > 0:
-            self.page_index -= 1
-            self.render_page()
-
-    def click_event(self, event):
-        # zapis kliknięcia w canvas
-        self.coordinations["page"] = self.page_index
-        self.coordinations["x"] = event.x
-        self.coordinations["y"] = event.y
+    def _on_overlay_ready(self, result_pdf):
+        """
+        Dostajemy gotowy PDF z overlay
+        """
+        self._overlay_result_pdf = result_pdf
         self.LabelCoord.configure(
-            text=f"Podpis na stronie {self.page_index + 1}, współrzędne: {event.x}x{event.y}"
+            text=f"Podpis wstawiony → {result_pdf.name}"
         )
-        print_info(f'Wybrane koordynaty: strona - {self.page_index} współrzędne: {event.x}x{event.y}')
-        self.generate_sign()
-        self.preview.destroy()
-
-    def generate_sign(self):
-        # Data
-        data = datetime.now().strftime("%d.%m.%Y").replace('"', "")
-        sig_width, sig_height = 130, 30
-        raw_path = Path(self.EntryLogo.get().strip())
-        print(raw_path)
-        if not raw_path:
-            msgbox.showwarning("Brak pliku", "Nie wybrano pliku png do podglądu.")
-            return
-        sig_path = raw_path
-        if not sig_path.exists():
-            msgbox.showerror(
-                "Plik nie istnieje",
-                f"Wskazany obraz popdisu nie istnieje:\n{sig_path}"
-            )
-            return
-        elif not sig_path.is_file():
-            msgbox.showerror(
-                "Nieprawidłowa ścieżka",
-                "Wskazana obraz popdisu nie jest plikiem."
-            )
-            return
-        elif sig_path.suffix.lower() != ".png":
-            msgbox.showerror(
-                "Nieprawidłowy format",
-                "Wybrany obraz popdisu nie jest dokumentem png."
-            )
-            return
-        text = "Podpisano: Mariusz Dyla"
-        textData = f"dnia: {data}"
-        textReason = self.EntryComment.get()
-        pdfmetrics.registerFont(TTFont("Roboto", "utils/Roboto-MediumItalic.ttf"))
-
-        # Rozmiar strony PDF
-        page = self.doc[self.coordinations["page"]]
-        page_width = page.rect.width
-        page_height = page.rect.height
-
-        # 1 tymczasowy plik z podpisem - TEMP OVERLAY
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as overlay_tmp:
-            overlay_path = Path(overlay_tmp.name)
-        c = rcanvas.Canvas(str(overlay_path), pagesize=(page_width, page_height))
-
-        # Konwersja Y: Tkinter -> PDF
-        pdf_x = self.coordinations["x"]
-        pdf_y = page_height - self.coordinations["y"]
-
-        # Wstawienie PNG podpisu
-        sig_img = ImageReader(sig_path)
-        c.drawImage(
-            sig_img,
-            pdf_x,
-            pdf_y - sig_height,
-            width=sig_width,
-            height=sig_height,
-            mask="auto",
-        )
-
-        # Wstawienie tekstu nad podpisem
-        text_x = pdf_x
-        text_y = pdf_y - sig_height
-        textData_y = text_y - 9
-        textReason_y = textData_y - 9
-
-        c.setFont("Roboto", 9)
-        c.drawString(text_x, text_y, text)
-        c.drawString(text_x, textData_y, textData)
-        c.drawString(text_x, textReason_y, textReason)
-        # zapisanie pliku tymczasoweego z podpisem
-        c.save()
-
-        # Scalanie PDF orig i podpisanego
-        pdf_path = Path(self.EntryORIG_PDF.get())
-
-        # 2 tymczasowy plik z podpisem - signed_output.pdf - TEMP PDF PO OVERLAY
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as signed_tmp:
-            signed_overlay_pdf = Path(signed_tmp.name)
-
-        with pikepdf.open(pdf_path) as original, pikepdf.open(overlay_path) as sig:
-            page = original.pages[self.page_index]
-            # Dodajemy podpis jako obrazek na stronie
-            page.add_overlay(sig.pages[0])
-            original.save(signed_overlay_pdf)
-
-        # zapamiętujemy ścieżkę do dalszego podpisu
-        self._overlay_result_pdf = signed_overlay_pdf
-
-        # sprzątanie
-        overlay_path.unlink(missing_ok=True)
 
     def electronic_sign(self):
         # --- PODPIS CYFROWY ---
