@@ -19,6 +19,8 @@ from pathlib import Path
 from datetime import datetime
 from PIL import Image, ImageTk
 from utils.app_config import config
+from utils import msgbox
+from utils.msgbox import print_info
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from pyhanko.sign import signers
@@ -108,7 +110,7 @@ class PodpisApp:
         self.EntryComment = customtkinter.CTkEntry(self.Frame, width=700)
         self.EntryComment.grid(row=3, column=2, padx=5, pady=5, sticky="we")
 
-        # Przycisk - wybierz miejsce w dokumencie
+        # Przycisk - wstaw podpis
         self.ButtonCoordinates = customtkinter.CTkButton(
             self.Frame,
             text="Wstaw podpis",
@@ -265,12 +267,12 @@ class PodpisApp:
     def togle_ntp(self):
         # print("Checkbox value:", self.VarNTP.get())
         if self.VarNTP.get():
-            logger.debug("Włączam NTP")
+            logger.info("Włączam NTP")
             self.EntryDataSet.grid_remove()
             self.EntryTimeSet.grid_remove()
             os.system("timedatectl set-ntp true")
         else:
-            logger.debug("Wyłączam NTP")
+            logger.info("Wyłączam NTP")
             self.EntryDataSet.grid()
             self.EntryTimeSet.grid()
             os.system("timedatectl set-ntp false")
@@ -284,8 +286,8 @@ class PodpisApp:
         os.system(f"timedatectl set-time '{self.data_czas}'")
 
     def open_dialog(self, widget, tekst, type, inout):
-        initial_dir_entry=Path(widget.get())
-        initial_dir=(initial_dir_entry.parent)
+        initial_dir_entry = Path(widget.get().strip())
+        initial_dir = initial_dir_entry.parent
         if inout == "in":
             # okno dilogowe
             file_path = filedialog.askopenfilename(
@@ -323,7 +325,32 @@ class PodpisApp:
         self.EntryFINAL_PDF.insert(0, new_path)
 
     def preview_pdf(self):
-        pdf_path = Path(self.EntryORIG_PDF.get())
+        # sprawdzenie śceżki pliku
+        raw_path = Path(self.EntryORIG_PDF.get().strip())
+        print(raw_path)
+        if not raw_path:
+            msgbox.showwarning("Brak pliku", "Nie wybrano pliku PDF do podglądu.")
+            return
+        pdf_path = raw_path
+        if not pdf_path.exists():
+            msgbox.showerror(
+                "Plik nie istnieje",
+                f"Wskazany plik nie istnieje:\n{pdf_path}"
+            )
+            return
+        elif not pdf_path.is_file():
+            msgbox.showerror(
+                "Nieprawidłowa ścieżka",
+                "Wskazana ścieżka nie jest plikiem."
+            )
+            return
+        elif pdf_path.suffix.lower() != ".pdf":
+            msgbox.showerror(
+                "Nieprawidłowy format",
+                "Wybrany plik nie jest dokumentem PDF."
+            )
+            return
+
         self.doc = fitz.open(pdf_path)
         self.page_index = 0
         self.page_count = self.doc.page_count
@@ -385,7 +412,7 @@ class PodpisApp:
         self.LabelCoord.configure(
             text=f"Podpis na stronie {self.page_index + 1}, współrzędne: {event.x}x{event.y}"
         )
-
+        print_info(f'Wybrane koordynaty: strona - {self.page_index} współrzędne: {event.x}x{event.y}')
         self.generate_sign()
         self.preview.destroy()
 
@@ -393,7 +420,30 @@ class PodpisApp:
         # Data
         data = datetime.now().strftime("%d.%m.%Y").replace('"', "")
         sig_width, sig_height = 130, 30
-        sig_path = self.EntryLogo.get()
+        raw_path = Path(self.EntryLogo.get().strip())
+        print(raw_path)
+        if not raw_path:
+            msgbox.showwarning("Brak pliku", "Nie wybrano pliku png do podglądu.")
+            return
+        sig_path = raw_path
+        if not sig_path.exists():
+            msgbox.showerror(
+                "Plik nie istnieje",
+                f"Wskazany obraz popdisu nie istnieje:\n{sig_path}"
+            )
+            return
+        elif not sig_path.is_file():
+            msgbox.showerror(
+                "Nieprawidłowa ścieżka",
+                "Wskazana obraz popdisu nie jest plikiem."
+            )
+            return
+        elif sig_path.suffix.lower() != ".png":
+            msgbox.showerror(
+                "Nieprawidłowy format",
+                "Wybrany obraz popdisu nie jest dokumentem png."
+            )
+            return
         text = "Podpisano: Mariusz Dyla"
         textData = f"dnia: {data}"
         textReason = self.EntryComment.get()
@@ -441,9 +491,7 @@ class PodpisApp:
         pdf_path = Path(self.EntryORIG_PDF.get())
 
         # 2 tymczasowy plik z podpisem - signed_output.pdf - TEMP PDF PO OVERLAY
-        with tempfile.NamedTemporaryFile(
-            suffix=".pdf", delete=False
-        ) as signed_tmp:
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as signed_tmp:
             signed_overlay_pdf = Path(signed_tmp.name)
 
         with pikepdf.open(pdf_path) as original, pikepdf.open(overlay_path) as sig:
@@ -461,6 +509,31 @@ class PodpisApp:
     def electronic_sign(self):
         # --- PODPIS CYFROWY ---
         # właściwe podpisanie certyfikatem
+        # sprawdzenie śceżki pliku
+        raw_path = Path(self.EntryCert.get().strip())
+        if not raw_path:
+            msgbox.showwarning("Brak pliku", "Nie wybrano pliku certyfikatu do podglądu.")
+            return
+        CERT_PATH = raw_path
+        if not CERT_PATH.exists():
+            msgbox.showerror(
+                "Plik nie istnieje",
+                f"Wskazany plik certyfikatu nie istnieje:\n{CERT_PATH}"
+            )
+            return
+        elif not CERT_PATH.is_file():
+            msgbox.showerror(
+                "Nieprawidłowa ścieżka",
+                "Wskazana ścieżka do certyfikatu nie jest plikiem."
+            )
+            return
+        elif CERT_PATH.suffix.lower() != ".p12":
+            msgbox.showerror(
+                "Nieprawidłowy format",
+                "Wybrany plik nie jest certyfikatem p12."
+            )
+            return
+
         CERT_PATH = self.EntryCert.get()
         CERT_PASSWORD = b""
         ORIG_PDF = self.EntryORIG_PDF.get()
@@ -474,31 +547,37 @@ class PodpisApp:
         SIGN_TEXT = self.EntryComment.get()
         FIELD_NAME = self.get_next_signature_name(SIG_PDF)
 
-        signer = signers.SimpleSigner.load_pkcs12(
-            pfx_file=CERT_PATH, passphrase=CERT_PASSWORD
-        )
+        try:
+            signer = signers.SimpleSigner.load_pkcs12(
+                pfx_file=CERT_PATH, passphrase=CERT_PASSWORD
+            )
 
-        with open(SIG_PDF, "rb") as inf:
-            writer = IncrementalPdfFileWriter(inf)
+            with open(SIG_PDF, "rb") as inf:
+                writer = IncrementalPdfFileWriter(inf)
 
-            with open(FINAL_PDF, "wb") as outf:
-                signers.sign_pdf(
-                    writer,
-                    signers.PdfSignatureMetadata(
-                        field_name=FIELD_NAME,
-                        reason=SIGN_TEXT,
-                        location="dilmark sp. z o.o.",
-                    ),
-                    signer=signer,
-                    output=outf,  # wynikowy PDF
-                )
-        logging.info(f"Podpisano plik {SIG_PDF} i zapisano jako: {FINAL_PDF}")
-        os.system(f"xdg-open {FINAL_PDF}")
-
+                with open(FINAL_PDF, "wb") as outf:
+                    signers.sign_pdf(
+                        writer,
+                        signers.PdfSignatureMetadata(
+                            field_name=FIELD_NAME,
+                            reason=SIGN_TEXT,
+                            location="dilmark sp. z o.o.",
+                        ),
+                        signer=signer,
+                        output=outf,  # wynikowy PDF
+                    )
+            logging.info(f"Podpisano plik {SIG_PDF} i zapisano jako: {FINAL_PDF}")
+            os.system(f"xdg-open {FINAL_PDF}")
+        except Exception as e:
+            msgbox.showerror(
+                "Błąd podpisu elektronicznego",
+                f"Wystąpił błąd podczas podpisywania dokumentu.\n\n"
+                f"Szczegóły:\n{e}"
+            )
         # sprzątanie tylko jeżeli faktycznie użyliśmy overlay
         if overlay_pdf and overlay_pdf.exists():
             overlay_pdf.unlink(missing_ok=True)
-            del self._overlay_result_pdf        
+            del self._overlay_result_pdf
         # Zapisanie ustawień
         self.save_app_config()
         os.system("timedatectl set-ntp true")

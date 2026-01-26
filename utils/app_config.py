@@ -8,16 +8,15 @@ GNU GPL v3
 import json
 from pathlib import Path
 
-# CONFIG_PATH = Path("utils/app_config.json")
 CONFIG_PATH = Path(__file__).parent / "app_config.json"
 
 
 DEFAULT_CONFIG = {
-    "config_orig_path": "/home/mariusz/Prywatne/Python/tmp/dokument.pdf",
-    "config_final_path": "/home/mariusz/Prywatne/Python/tmp/dokument_sign.pdf",
-    "config_comment": "DS2601A",
-    "config_cert": "/home/mariusz/Prywatne/Python/tmp/MariuszDyla.p12",
-    "config_logo": "/home/mariusz/Prywatne/Python/tmp/utils/podpis.png"
+    "config_orig_path": "document.pdf",
+    "config_final_path": "document_sign.pdf",
+    "config_comment": "PKCS#12 sign",
+    "config_cert": "utils/sign.p12",
+    "config_logo": "utils/sign.png"
 }
 
 
