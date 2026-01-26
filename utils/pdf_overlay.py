@@ -42,6 +42,12 @@ class overlay:
         self.preview = None
         self.canvas = None
 
+        self.sig_width = 130
+        self.sig_height = 30
+        self.preview_rect = None
+        self.sign_x = None
+        self.sign_y = None
+
     def preview_pdf(self):
         # sprawdzenie śceżki pliku
         if not self.raw_path:
@@ -50,20 +56,17 @@ class overlay:
         pdf_path = self.raw_path
         if not pdf_path.exists():
             msgbox.showerror(
-                "Plik nie istnieje",
-                f"Wskazany plik nie istnieje:\n{pdf_path}"
+                "Plik nie istnieje", f"Wskazany plik nie istnieje:\n{pdf_path}"
             )
             return
         elif not pdf_path.is_file():
             msgbox.showerror(
-                "Nieprawidłowa ścieżka",
-                "Wskazana ścieżka nie jest plikiem."
+                "Nieprawidłowa ścieżka", "Wskazana ścieżka nie jest plikiem."
             )
             return
         elif pdf_path.suffix.lower() != ".pdf":
             msgbox.showerror(
-                "Nieprawidłowy format",
-                "Wybrany plik nie jest dokumentem PDF."
+                "Nieprawidłowy format", "Wybrany plik nie jest dokumentem PDF."
             )
             return
 
@@ -91,7 +94,30 @@ class overlay:
         self.coordinations = {}
 
         self.render_page()
+        self.canvas.bind("<Motion>", self.on_mouse_move)
         self.canvas.bind("<Button-1>", self.click_event)
+
+    def on_mouse_move(self, event):
+        self.sign_x = event.x
+        self.sign_y = event.y
+
+        x1 = self.sign_x
+        y1 = self.sign_y
+        x2 = x1 + self.sig_width
+        y2 = y1 + self.sig_height + 18
+
+        if self.preview_rect is None:
+            self.preview_rect = self.canvas.create_rectangle(
+                x1,
+                y1,
+                x2,
+                y2,
+                outline="red",
+                width=2,
+                dash=(4, 2),
+            )
+        else:
+            self.canvas.coords(self.preview_rect, x1, y1, x2, y2)
 
     def render_page(self):
         page = self.doc[self.page_index]
@@ -104,7 +130,15 @@ class overlay:
 
         self.canvas.config(width=self.pix.width, height=self.pix.height)
         self.canvas.delete("all")
+
+        # 🔁 canvas został wyczyszczony → obiekty NIE ISTNIEJĄ
+        self.preview_rect = None
+
         self.canvas.create_image(0, 0, anchor="nw", image=self.preview_img)
+
+        # ⬇️ ODTWARZAMY RAMKĘ JEŚLI MAMY POZYCJĘ
+        if self.sign_x is not None and self.sign_y is not None:
+            self.on_mouse_move(type("Event", (), {"x": self.sign_x, "y": self.sign_y}))
 
         self.preview.title(
             f"Podgląd PDF – strona {self.page_index + 1}/{self.page_count}"
@@ -125,17 +159,13 @@ class overlay:
         self.coordinations["page"] = self.page_index
         self.coordinations["x"] = event.x
         self.coordinations["y"] = event.y
-        self.LabelCoord.configure(
-            text=f"Podpis na stronie {self.page_index + 1}, współrzędne: {event.x}x{event.y}"
-        )
-        print_info(f'Wybrane koordynaty: strona - {self.page_index} współrzędne: {event.x}x{event.y}')
+
         self.generate_sign()
         self.preview.destroy()
 
     def generate_sign(self):
         # Data
         data = datetime.now().strftime("%d.%m.%Y").replace('"', "")
-        sig_width, sig_height = 130, 30
         raw_path = Path(self.logo_path)
         if not raw_path:
             msgbox.showwarning("Brak pliku", "Nie wybrano pliku png do podglądu.")
@@ -143,20 +173,17 @@ class overlay:
         sig_path = raw_path
         if not sig_path.exists():
             msgbox.showerror(
-                "Plik nie istnieje",
-                f"Wskazany obraz popdisu nie istnieje:\n{sig_path}"
+                "Plik nie istnieje", f"Wskazany obraz popdisu nie istnieje:\n{sig_path}"
             )
             return
         elif not sig_path.is_file():
             msgbox.showerror(
-                "Nieprawidłowa ścieżka",
-                "Wskazana obraz popdisu nie jest plikiem."
+                "Nieprawidłowa ścieżka", "Wskazana obraz popdisu nie jest plikiem."
             )
             return
         elif sig_path.suffix.lower() != ".png":
             msgbox.showerror(
-                "Nieprawidłowy format",
-                "Wybrany obraz popdisu nie jest dokumentem png."
+                "Nieprawidłowy format", "Wybrany obraz popdisu nie jest dokumentem png."
             )
             return
         text = "Podpisano: Mariusz Dyla"
@@ -183,15 +210,15 @@ class overlay:
         c.drawImage(
             sig_img,
             pdf_x,
-            pdf_y - sig_height,
-            width=sig_width,
-            height=sig_height,
+            pdf_y - self.sig_height,
+            width=self.sig_width,
+            height=self.sig_height,
             mask="auto",
         )
 
         # Wstawienie tekstu nad podpisem
         text_x = pdf_x
-        text_y = pdf_y - sig_height
+        text_y = pdf_y - self.sig_height
         textData_y = text_y - 9
         textReason_y = textData_y - 9
 
@@ -217,6 +244,13 @@ class overlay:
         # zapamiętujemy ścieżkę do dalszego podpisu
         if self.on_done:
             self.on_done(signed_overlay_pdf)
+
+        self.LabelCoord.configure(
+            text=f"Podpis wstawiony → {signed_overlay_pdf.name} - stronia: {self.page_index + 1}, współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
+        )
+        print_info(
+            f"Podpis wstawiony - strona: {self.page_index} współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
+        )
 
         # sprzątanie
         overlay_path.unlink(missing_ok=True)

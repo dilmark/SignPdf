@@ -311,3 +311,252 @@
  {'/etc/localtime is a symlink to': 'Europe/Warsaw'}
 2026-01-26 21:11:13 [INFO] root: Podpisano plik /tmp/tmpfcr_8zf1.pdf i zapisano jako: /home/mariusz/Prywatne/Python/tmp/WW2411A_sign.pdf
 2026-01-26 21:13:16 [INFO] root: STOP aplikacji
+2026-01-26 21:35:01 [INFO] root: START aplikacji
+2026-01-26 21:35:01 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:35:01 [INFO] utils.app: Włączam NTP
+2026-01-26 21:35:14 [INFO] root: Wybrano plik do odczytu: Otwórz plik do podpisu
+2026-01-26 21:35:16 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:35:21 [INFO] utils.msgbox: Wybrane koordynaty: strona - 0 współrzędne: 380x719
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:35:22 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:35:48 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:35:51 [INFO] utils.msgbox: Wybrane koordynaty: strona - 0 współrzędne: 72x718
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:35:51 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:39:12 [INFO] root: START aplikacji
+2026-01-26 21:39:12 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:39:13 [INFO] utils.app: Włączam NTP
+2026-01-26 21:39:14 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:39:52 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:40:00 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:40:29 [INFO] root: START aplikacji
+2026-01-26 21:40:29 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:40:29 [INFO] utils.app: Włączam NTP
+2026-01-26 21:40:31 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:42:16 [INFO] root: START aplikacji
+2026-01-26 21:42:16 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:42:17 [INFO] utils.app: Włączam NTP
+2026-01-26 21:42:18 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:42:20 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:43:34 [INFO] root: START aplikacji
+2026-01-26 21:43:34 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:43:35 [INFO] utils.app: Włączam NTP
+2026-01-26 21:43:36 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:43:38 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:43:57 [INFO] root: START aplikacji
+2026-01-26 21:43:57 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:43:57 [INFO] utils.app: Włączam NTP
+2026-01-26 21:43:58 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:43:59 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:44:51 [INFO] root: START aplikacji
+2026-01-26 21:44:51 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:44:52 [INFO] utils.app: Włączam NTP
+2026-01-26 21:44:53 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:44:55 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:44:55 [INFO] utils.msgbox: Wybrane koordynaty: strona - 0 współrzędne: 365x712
+2026-01-26 21:45:17 [INFO] root: START aplikacji
+2026-01-26 21:45:17 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:45:17 [INFO] utils.app: Włączam NTP
+2026-01-26 21:45:20 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:45:22 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:45:22 [INFO] utils.msgbox: Wybrane koordynaty: strona - 0 współrzędne: 365x720
+2026-01-26 21:45:54 [INFO] root: START aplikacji
+2026-01-26 21:45:54 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:45:54 [INFO] utils.app: Włączam NTP
+2026-01-26 21:45:55 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:45:56 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:45:56 [INFO] utils.msgbox: Wybrane koordynaty: strona - 0 współrzędne: 271x341
+2026-01-26 21:47:16 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:47:40 [INFO] root: START aplikacji
+2026-01-26 21:47:40 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:47:40 [INFO] utils.app: Włączam NTP
+2026-01-26 21:47:42 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:48:06 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:48:06 [INFO] utils.msgbox: Podpis wstawiony - strona: 0 współrzędne: 437x33
+2026-01-26 21:48:15 [DEBUG] asyncio: Using selector: EpollSelector
+2026-01-26 21:48:15 [DEBUG] tzlocal: /etc/localtime found
+2026-01-26 21:48:15 [DEBUG] tzlocal: 1 found:
+ {'/etc/localtime is a symlink to': 'Europe/Warsaw'}
+2026-01-26 21:48:16 [INFO] root: Podpisano plik /tmp/tmp38n4nx_l.pdf i zapisano jako: /home/mariusz/Prywatne/Python/tmp/WW2411A_sign.pdf
+2026-01-26 21:48:40 [INFO] root: Wybrano plik do odczytu: Otwórz plik do podpisu
+2026-01-26 21:48:42 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:49:08 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:49:08 [INFO] utils.msgbox: Podpis wstawiony - strona: 0 współrzędne: 68x668
+2026-01-26 21:49:10 [DEBUG] asyncio: Using selector: EpollSelector
+2026-01-26 21:49:10 [INFO] root: Podpisano plik /tmp/tmpoc9gl6xh.pdf i zapisano jako: /home/mariusz/Prywatne/Python/tmp/WW2411A_sign_sign.pdf
+2026-01-26 21:52:23 [INFO] root: START aplikacji
+2026-01-26 21:52:23 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 21:52:24 [INFO] utils.app: Włączam NTP
+2026-01-26 21:52:36 [INFO] root: Wybrano plik do odczytu: Otwórz plik do podpisu
+2026-01-26 21:52:37 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 21:52:56 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 21:52:57 [INFO] utils.msgbox: Podpis wstawiony - strona: 0 współrzędne: 398x713
+2026-01-26 21:52:59 [INFO] root: STOP aplikacji
+2026-01-26 22:00:56 [INFO] root: START aplikacji
+2026-01-26 22:00:56 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 22:00:56 [INFO] utils.app: Włączam NTP
+2026-01-26 22:00:58 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:01:15 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 22:01:20 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 22:01:20 [INFO] utils.msgbox: Podpis wstawiony - strona: 0 współrzędne: 375x710
+2026-01-26 22:01:22 [DEBUG] asyncio: Using selector: EpollSelector
+2026-01-26 22:01:22 [DEBUG] tzlocal: /etc/localtime found
+2026-01-26 22:01:22 [DEBUG] tzlocal: 1 found:
+ {'/etc/localtime is a symlink to': 'Europe/Warsaw'}
+2026-01-26 22:01:22 [INFO] root: Podpisano plik /tmp/tmpft69vm2o.pdf i zapisano jako: /home/mariusz/Prywatne/Python/tmp/WW2411A_sign_sign_sign.pdf
+2026-01-26 22:01:37 [INFO] root: Wybrano plik do odczytu: Otwórz plik do podpisu
+2026-01-26 22:01:37 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:06:45 [INFO] root: START aplikacji
+2026-01-26 22:06:45 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 22:06:45 [INFO] utils.app: Włączam NTP
+2026-01-26 22:06:48 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 22:07:24 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 22:07:24 [INFO] utils.msgbox: Podpis wstawiony - strona: 4 współrzędne: 339x459
+2026-01-26 22:07:30 [DEBUG] asyncio: Using selector: EpollSelector
+2026-01-26 22:07:30 [DEBUG] tzlocal: /etc/localtime found
+2026-01-26 22:07:30 [DEBUG] tzlocal: 1 found:
+ {'/etc/localtime is a symlink to': 'Europe/Warsaw'}
+2026-01-26 22:07:30 [INFO] root: Podpisano plik /tmp/tmpz154f0gd.pdf i zapisano jako: /home/mariusz/Prywatne/Python/tmp/WW2411A_sign_sign_sign.pdf
+2026-01-26 22:08:16 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:10:34 [INFO] root: START aplikacji
+2026-01-26 22:10:34 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 22:10:34 [INFO] utils.app: Włączam NTP
+2026-01-26 22:10:36 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:12:03 [INFO] root: START aplikacji
+2026-01-26 22:12:03 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 22:12:04 [INFO] utils.app: Włączam NTP
+2026-01-26 22:12:34 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:14:49 [INFO] root: START aplikacji
+2026-01-26 22:14:49 [DEBUG] utils.app: Tworzę okno główne
+2026-01-26 22:14:49 [INFO] utils.app: Włączam NTP
+2026-01-26 22:14:52 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 22:15:08 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 22:15:08 [INFO] utils.msgbox: Podpis wstawiony - strona: 0 współrzędne: 388x715
+2026-01-26 22:15:12 [DEBUG] asyncio: Using selector: EpollSelector
+2026-01-26 22:15:12 [DEBUG] tzlocal: /etc/localtime found
+2026-01-26 22:15:12 [DEBUG] tzlocal: 1 found:
+ {'/etc/localtime is a symlink to': 'Europe/Warsaw'}
+2026-01-26 22:15:12 [INFO] root: Podpisano plik /tmp/tmps8nj0hij.pdf i zapisano jako: /home/mariusz/Prywatne/Python/tmp/WW2411A_sign_sign_sign.pdf
+2026-01-26 22:15:21 [DEBUG] utils.pdf_overlay: Tworzę plik z graficznym podpisem i tekstem
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: STREAM b'IHDR' 16 13
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: STREAM b'PLTE' 41 666
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: STREAM b'tRNS' 719 1
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: STREAM b'bKGD' 732 1
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: b'bKGD' 732 1 (unknown)
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: STREAM b'pHYs' 745 9
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: STREAM b'tIME' 766 7
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: b'tIME' 766 7 (unknown)
+2026-01-26 22:15:34 [DEBUG] PIL.PngImagePlugin: STREAM b'IDAT' 785 8192
+2026-01-26 22:15:34 [INFO] utils.msgbox: Podpis wstawiony - strona: 0 współrzędne: 338x771
+2026-01-26 22:15:42 [DEBUG] asyncio: Using selector: EpollSelector
+2026-01-26 22:15:42 [INFO] root: Podpisano plik /tmp/tmpvst14vq4.pdf i zapisano jako: /home/mariusz/Prywatne/Python/tmp/WW2411A_sign_sign_sign.pdf

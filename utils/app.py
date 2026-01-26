@@ -348,9 +348,6 @@ class PodpisApp:
         Dostajemy gotowy PDF z overlay
         """
         self._overlay_result_pdf = result_pdf
-        self.LabelCoord.configure(
-            text=f"Podpis wstawiony → {result_pdf.name}"
-        )
 
     def electronic_sign(self):
         # --- PODPIS CYFROWY ---
