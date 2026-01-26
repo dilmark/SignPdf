@@ -1,0 +1,7 @@
+{
+  "config_orig_path": "/home/mariusz/Firma/2_Fary/2026/2601/FVS2026011T_NWL_Holland_signed.pdf",
+  "config_final_path": "./FVS2026011T_NWL_Holland_signed_sign.pdf",
+  "config_comment": "Przyjmuję zlecenie do realizacji.",
+  "config_cert": "/home/mariusz/.openssl/MariuszDyla.p12",
+  "config_logo": "/home/mariusz/Firma/podpisMariuszDyla.png"
+}
