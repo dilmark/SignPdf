@@ -6,7 +6,6 @@ GNU GPL v3
 """
 
 import fitz
-import pikepdf
 import tempfile
 import logging
 import tkinter as tk
@@ -26,14 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 class Overlay:
-    def __init__(self, parent, pdf_path, logo_path, comment, label_coord, on_done=None):
+    def __init__(self, parent, pdf_path, logo_path, comment, on_done=None):
         logger.debug("Tworzę plik z graficznym podpisem i tekstem")
 
         self.parent = parent
         self.raw_path = Path(pdf_path)
         self.logo_path = logo_path
         self.comment = comment
-        self.LabelCoord = label_coord
         self.on_done = on_done
 
         self.doc = None
@@ -47,6 +45,8 @@ class Overlay:
         self.preview_rect = None
         self.sign_x = None
         self.sign_y = None
+        self.width = 0
+        self.hight = 0
 
     def preview_pdf(self):
         # sprawdzenie śceżki pliku
@@ -127,6 +127,8 @@ class Overlay:
         )
 
         self.preview_img = ImageTk.PhotoImage(img)
+        self.width = self.pix.width
+        self.hight = self.pix.height
 
         self.canvas.config(width=self.pix.width, height=self.pix.height)
         self.canvas.delete("all")
@@ -173,7 +175,8 @@ class Overlay:
         logo_path = logo_raw_path
         if not logo_path.exists():
             msgbox.showerror(
-                "Plik nie istnieje", f"Wskazany obraz popdisu nie istnieje:\n{logo_path}"
+                "Plik nie istnieje",
+                f"Wskazany obraz popdisu nie istnieje:\n{logo_path}",
             )
             return
         elif not logo_path.is_file():
@@ -188,7 +191,7 @@ class Overlay:
             return
         text = "Podpisano: Mariusz Dyla"
         textData = f"dnia: {data}"
-        textReason = self.comment
+        textReason = self.comment or ""
         pdfmetrics.registerFont(TTFont("Roboto", "utils/Roboto-MediumItalic.ttf"))
 
         # Rozmiar strony PDF
@@ -197,9 +200,10 @@ class Overlay:
         page_height = page.rect.height
 
         # 1 tymczasowy plik z podpisem - TEMP OVERLAY
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as overlay_tmp:
-            overlay_path = Path(overlay_tmp.name)
-        c = rcanvas.Canvas(str(overlay_path), pagesize=(page_width, page_height))
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            pdf_stamp_path = Path(tmp.name)
+
+        c = rcanvas.Canvas(str(pdf_stamp_path), pagesize=(page_width, page_height))
 
         # Konwersja Y: Tkinter -> PDF
         pdf_x = self.coordinations["x"]
@@ -227,30 +231,13 @@ class Overlay:
         c.drawString(text_x, textData_y, textData)
         c.drawString(text_x, textReason_y, textReason)
         # zapisanie pliku tymczasoweego z podpisem
+        c.showPage()
         c.save()
 
-        # Scalanie PDF orig i podpisanego
-        pdf_path = Path(self.raw_path)
-        # 2 tymczasowy plik z podpisem - signed_output.pdf - TEMP PDF PO OVERLAY
-        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as signed_tmp:
-            signed_overlay_pdf = Path(signed_tmp.name)
-
-        with pikepdf.open(pdf_path) as original, pikepdf.open(overlay_path) as sig:
-            page = original.pages[self.page_index]
-            # Dodajemy podpis jako obrazek na stronie
-            page.add_overlay(sig.pages[0])
-            original.save(signed_overlay_pdf)
-
+        logger.info(
+            f"Podpis graficzny przygotowany {pdf_stamp_path} - strona: {self.page_index} współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
+        )
         # zapamiętujemy ścieżkę do dalszego podpisu
         if self.on_done:
-            self.on_done(signed_overlay_pdf)
+            self.on_done(pdf_stamp_path, self.page_index, self.width, self.hight)
 
-        self.LabelCoord.configure(
-            text=f"Konfiguracja: Podpis zostanie wstawiony → strona: {self.page_index + 1}, współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
-        )
-        logger.info(
-            f"Podpis graficzny przygotowany {signed_overlay_pdf} dla dokumentu {pdf_path} - strona: {self.page_index} współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
-        )
-
-        # sprzątanie
-        overlay_path.unlink(missing_ok=True)

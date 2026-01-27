@@ -19,7 +19,7 @@ from datetime import datetime
 from utils.app_config import config
 from utils import msgbox
 from utils.msgbox import print_info
-from utils.pdf_overlay import Overlay
+from utils.pdf_stamp import Overlay
 from utils.pdf_sign import Sign
 
 # logger modułu
@@ -36,6 +36,12 @@ class PodpisApp:
         self.window.title(f"Podpis elektroniczny dokumentów PDF {branch} {version}")
         self.window.geometry("900x300")
         self.window.iconphoto(False, tk.PhotoImage(file="utils/icon.png"))
+
+        self._pdf_stamp = Path("/dev/null")
+        self._sign_with_stamp = False
+        self.page_index = 0
+        self.hight = 0
+        self.width = 0
 
         # tworzenie GUI
         self._create_widgets()
@@ -141,16 +147,16 @@ class PodpisApp:
         # Przycisk - wstaw podpis
         self.ButtonCoordinates = customtkinter.CTkButton(
             self.Frame,
-            text="Wstaw podpis",
-            command=self.preview_pdf,
+            text="Wstaw podpis\ni podpisz",
+            command=self.make_pdf_stamp,
         )
         self.ButtonCoordinates.grid(row=4, column=1, padx=5, pady=35, sticky="we")
 
         # Przycisk podpisz elektronicznie pdf
         self.ButtonSIGN = customtkinter.CTkButton(
             self.Frame,
-            text="Podpisz dokument",
-            command=self.sign_pdf,
+            text="Tylko podpisz\ndokument",
+            command=self.sign_pdf_only,
         )
         self.ButtonSIGN.grid(row=4, column=2, padx=5, pady=35, sticky="e")
 
@@ -354,11 +360,12 @@ class PodpisApp:
         new_path = path.with_name(path.stem + "_sign.pdf")
         self.EntryFINAL_PDF.insert(0, new_path)
 
-    def preview_pdf(self):
+    def make_pdf_stamp(self):
+        self._sign_with_stamp = True
         orig_pdf = Path(self.EntryORIG_PDF.get().strip())
 
         if not orig_pdf.exists():
-            msgbox.showerror("Błąd", "Wybrany plik PDF nie istnieje.")
+            msgbox.showerror("Błąd", "Wybrany źródłowy plik PDF nie istnieje.")
             return
 
         try:
@@ -367,49 +374,56 @@ class PodpisApp:
                 pdf_path=orig_pdf,
                 logo_path=self.EntryLogo.get(),
                 comment=self.EntryComment.get(),
-                label_coord=self.LabelCoord,
-                on_done=self._on_overlay_ready,
+                on_done=self._on_stamp_ready,
             )
             self._overlay.preview_pdf()
 
         except Exception as e:
             msgbox.showerror("Błąd podglądu PDF", str(e))
 
-    def _on_overlay_ready(self, result_pdf):
-        """Dostajemy gotowy PDF z overlay"""
-        self._overlay_result_pdf = result_pdf
+    def _on_stamp_ready(self, pdf_stamp_path, page_index, width, hight):
+        self._pdf_stamp = pdf_stamp_path
+        self.page_index = page_index
+        self.width = width
+        self.hight = hight
+        self.sign_pdf()
+
+    def sign_pdf_only(self):
+        self._sign_with_stamp = False
+        # jeżeli plik pieczątki pdf nie powstał to podstawiamy
+        # dowolny katalog aby pyhanko podpisywał bez użycia stamp
+        self._pdf_stamp = Path("/tmp")
+        self.sign_pdf()
 
     def sign_pdf(self):
-        pdf_overlay = Path(self._overlay_result_pdf)
-
-        if not pdf_overlay.exists():
-            msgbox.showerror("Błąd", "Wybrany plik PDF nie istnieje.")
-            return
-
         try:
-            # def __init__(self, parent, pdf_overlay, pdf_orig, pdf_final, logo_path, comment, cert, on_done=None):
             self._overlay = Sign(
                 parent=self.window,
-                pdf_overlay=pdf_overlay,
+                pdf_stamp=self._pdf_stamp,
                 pdf_orig=self.EntryORIG_PDF.get(),
                 pdf_final=self.EntryFINAL_PDF.get(),
                 logo_path=self.EntryLogo.get(),
                 comment=self.EntryComment.get(),
                 cert=self.EntryCert.get(),
+                page_index=self.page_index,
+                width=self.width,
+                hight=self.hight,
+                _sign_with_stamp=self._sign_with_stamp,
                 on_done=lambda result_pdf: setattr(self, "result_pdf", result_pdf),
             )
             self._overlay.electronic_sign()
 
         except Exception as e:
             msgbox.showerror("Błąd podglądu PDF", str(e))
-        self.LabelCoord.configure(text=f"Dokument został podpisany: {self.result_pdf}")
+        self.LabelCoord.configure(text=f"Dokument {Path(self.EntryORIG_PDF.get(),).name} został podpisany: {Path(self.result_pdf).name}")
         print_info(f"Dokument został podpisany: {self.result_pdf}")
         # Wyświetl podpisany pdf
         os.system(f"xdg-open {self.result_pdf}")
         # sprzątanie tylko jeżeli faktycznie użyliśmy overlay
-        if self._overlay_result_pdf and self._overlay_result_pdf.exists():
-            self._overlay_result_pdf.unlink(missing_ok=True)
-            del self._overlay_result_pdf
+        if self._pdf_stamp and self._pdf_stamp.exists():
+            self._pdf_stamp.unlink(missing_ok=True)
+            del self._pdf_stamp
+            # self._pdf_stamp=Path("dev/null")
         # Zapisanie ustawień
         self.save_app_config()
         os.system("timedatectl set-ntp true")

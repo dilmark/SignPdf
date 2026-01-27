@@ -8,7 +8,8 @@ GNU GPL v3
 import logging
 
 from pathlib import Path
-from pyhanko.sign import signers
+from pyhanko import stamp
+from pyhanko.sign import fields, signers
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.pdf_utils.reader import PdfFileReader
 from utils import msgbox
@@ -22,23 +23,31 @@ class Sign:
     def __init__(
         self,
         parent,
-        pdf_overlay,
+        pdf_stamp,
         pdf_orig,
         pdf_final,
         logo_path,
         comment,
         cert,
+        page_index,
+        width,
+        hight,
+        _sign_with_stamp,
         on_done=None,
     ):
         print_info("Tworzę plik z graficznym podpisem i tekstem")
 
         self.parent = parent
-        self.pdf_overlay = Path(pdf_overlay)
+        self.pdf_stamp_path = Path(pdf_stamp)
         self.pdf_orig = pdf_orig
         self.pdf_final = pdf_final
         self.logo_path = logo_path
         self.comment = comment
         self.cert = cert
+        self.page_index = page_index
+        self.width = width
+        self.hight = hight
+        self._sign_with_stamp = _sign_with_stamp
         self.on_done = on_done
 
     def electronic_sign(self):
@@ -72,36 +81,50 @@ class Sign:
 
         CERT_PASSWORD = b""
         ORIG_PDF = self.pdf_orig
-
-        overlay_pdf = self.pdf_overlay
-        if overlay_pdf and overlay_pdf.exists():
-            SIG_PDF = overlay_pdf
-        else:
-            SIG_PDF = ORIG_PDF
+        STAMP_PDF = self.pdf_stamp_path
         FINAL_PDF = self.pdf_final
         SIGN_TEXT = self.comment
-        FIELD_NAME = self.get_next_signature_name(SIG_PDF)
+        FIELD_NAME = self.get_next_signature_name(ORIG_PDF)
 
         try:
             signer = signers.SimpleSigner.load_pkcs12(
                 pfx_file=CERT_PATH, passphrase=CERT_PASSWORD
             )
-
-            with open(SIG_PDF, "rb") as inf:
-                writer = IncrementalPdfFileWriter(inf)
-
-                with open(FINAL_PDF, "wb") as outf:
-                    signers.sign_pdf(
-                        writer,
-                        signers.PdfSignatureMetadata(
-                            field_name=FIELD_NAME,
-                            reason=SIGN_TEXT,
-                            location="dilmark sp. z o.o.",
-                        ),
-                        signer=signer,
-                        output=outf,  # wynikowy PDF
+            if self._sign_with_stamp and STAMP_PDF.is_file():
+            # if STAMP_PDF.is_file():
+                # podpis wraz z pdf_stamp
+                with open(ORIG_PDF, "rb") as inf:
+                    writer = IncrementalPdfFileWriter(inf)
+                    fields.append_signature_field(
+                        writer, sig_field_spec=fields.SigFieldSpec(
+                            FIELD_NAME, box=(0, 0, self.width, self.hight),on_page=self.page_index
+                        )
                     )
-            logging.info(f"Podpisano plik {SIG_PDF} i zapisano jako: {FINAL_PDF}")
+                    meta = signers.PdfSignatureMetadata(field_name=FIELD_NAME,reason=SIGN_TEXT)
+                    pdf_signer = signers.PdfSigner(
+                        meta, signer=signer,
+                        stamp_style=stamp.StaticStampStyle.from_pdf_file(STAMP_PDF)
+                    )
+                    with open(FINAL_PDF, 'wb') as outf:
+                        pdf_signer.sign_pdf(writer, output=outf)
+            else:
+                # Sam podpis bez logo
+                with open(ORIG_PDF, "rb") as inf:
+                    writer = IncrementalPdfFileWriter(inf)
+
+                    with open(FINAL_PDF, "wb") as outf:
+                        signers.sign_pdf(
+                            writer,
+                            signers.PdfSignatureMetadata(
+                                field_name=FIELD_NAME,
+                                reason=SIGN_TEXT,
+                                location="dilmark sp. z o.o.",
+                            ),
+                            signer=signer,
+                            output=outf,  # wynikowy PDF
+                        )
+
+            logging.info(f"Podpisano plik {ORIG_PDF} i zapisano jako: {FINAL_PDF}")
             # zapamiętujemy ścieżkę do dalszego podpisu
             if self.on_done:
                 self.on_done(FINAL_PDF)
