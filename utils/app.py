@@ -9,6 +9,8 @@ import tkinter as tk
 import customtkinter
 import logging
 import os
+import subprocess
+
 
 from tkcalendar import DateEntry
 from tkinter import ttk, filedialog
@@ -30,13 +32,43 @@ class PodpisApp:
 
         # główne okno aplikacji
         self.window = customtkinter.CTk()
-        self.window.title("Podpis elektroniczny dokumentów pdf")
+        branch, version = self.get_git_info()
+        self.window.title(f"Podpis elektroniczny dokumentów PDF {branch} {version}")
         self.window.geometry("900x300")
         self.window.iconphoto(False, tk.PhotoImage(file="utils/icon.png"))
 
         # tworzenie GUI
         self._create_widgets()
         self._bind_events()
+
+    def get_git_info(self):
+        # Branch
+        try:
+            branch = (
+                subprocess.check_output(
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                    stderr=subprocess.DEVNULL,
+                )
+                .decode()
+                .strip()
+            )
+        except Exception:
+            branch = "unknown"
+
+        # Najnowszy tag
+        try:
+            version = (
+                subprocess.check_output(
+                    ["git", "describe", "--tags", "--abbrev=0"],
+                    stderr=subprocess.DEVNULL,
+                )
+                .decode()
+                .strip()
+            )
+        except Exception:
+            version = "v0.0"
+
+        return branch, version
 
     def _create_widgets(self):
         # główny kontener zakładek
@@ -370,12 +402,8 @@ class PodpisApp:
 
         except Exception as e:
             msgbox.showerror("Błąd podglądu PDF", str(e))
-        self.LabelCoord.configure(
-            text=f"Dokument został podpisany: {self.result_pdf}"
-        )
-        print_info(
-            f"Dokument został podpisany: {self.result_pdf}"
-        )
+        self.LabelCoord.configure(text=f"Dokument został podpisany: {self.result_pdf}")
+        print_info(f"Dokument został podpisany: {self.result_pdf}")
         # Wyświetl podpisany pdf
         os.system(f"xdg-open {self.result_pdf}")
         # sprzątanie tylko jeżeli faktycznie użyliśmy overlay
