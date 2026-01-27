@@ -14,12 +14,11 @@ from tkcalendar import DateEntry
 from tkinter import ttk, filedialog
 from pathlib import Path
 from datetime import datetime
-from pyhanko.sign import signers
-from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
-from pyhanko.pdf_utils.reader import PdfFileReader
 from utils.app_config import config
 from utils import msgbox
-from utils.pdf_overlay import overlay
+from utils.msgbox import print_info
+from utils.pdf_overlay import Overlay
+from utils.pdf_sign import Sign
 
 # logger modułu
 logger = logging.getLogger(__name__)
@@ -56,12 +55,17 @@ class PodpisApp:
 
     def _create_podpis_tab(self):
         # konfiguracja layoutu
-        self.tab_podpis.columnconfigure(0, weight=1)
-        self.tab_podpis.rowconfigure(1, weight=1)
+        self.tab_podpis.grid_rowconfigure(0, weight=1)  # główna zawartość
+        self.tab_podpis.grid_rowconfigure(1, weight=0)  # belka statusu
+        self.tab_podpis.grid_columnconfigure(0, weight=1)
+
+        my_font = customtkinter.CTkFont(family="Roboto", size=13, weight="bold")
 
         # górny panel filtrów
         self.Frame = customtkinter.CTkFrame(self.tab_podpis, border_width=0)
-        self.Frame.grid(padx=1, pady=1, sticky="we")
+        self.Frame.grid(row=0, column=0, padx=3, pady=0, sticky="nswe")
+        self.FrameDown = customtkinter.CTkFrame(self.tab_podpis, border_width=1)
+        self.FrameDown.grid(row=1, column=0, padx=3, pady=0, sticky="sew")
 
         # Label
         self.MainLabel = customtkinter.CTkLabel(
@@ -110,17 +114,19 @@ class PodpisApp:
         )
         self.ButtonCoordinates.grid(row=4, column=1, padx=5, pady=35, sticky="we")
 
-        self.LabelCoord = customtkinter.CTkLabel(
-            self.Frame, text="Brak widocznego podpisu."
-        )
-        self.LabelCoord.grid(row=4, column=2, padx=5, pady=5, sticky="w")
-
+        # Przycisk podpisz elektronicznie pdf
         self.ButtonSIGN = customtkinter.CTkButton(
             self.Frame,
             text="Podpisz dokument",
-            command=self.electronic_sign,
+            command=self.sign_pdf,
         )
         self.ButtonSIGN.grid(row=4, column=2, padx=5, pady=35, sticky="e")
+
+        # Belks statusu
+        self.LabelCoord = customtkinter.CTkLabel(
+            self.FrameDown, text="Konfiguracja: Brak widocznego podpisu.", font=my_font
+        )
+        self.LabelCoord.grid(padx=3, pady=2, sticky="nwe")
 
     def _create_info_tab(self):
         # układ zakładki informacji
@@ -320,139 +326,65 @@ class PodpisApp:
         orig_pdf = Path(self.EntryORIG_PDF.get().strip())
 
         if not orig_pdf.exists():
-            msgbox.showerror(
-                "Błąd",
-                "Wybrany plik PDF nie istnieje."
-            )
+            msgbox.showerror("Błąd", "Wybrany plik PDF nie istnieje.")
             return
 
         try:
-            self._overlay = overlay(
+            self._overlay = Overlay(
                 parent=self.window,
                 pdf_path=orig_pdf,
                 logo_path=self.EntryLogo.get(),
                 comment=self.EntryComment.get(),
-                label_coord = self.LabelCoord,
+                label_coord=self.LabelCoord,
                 on_done=self._on_overlay_ready,
             )
             self._overlay.preview_pdf()
 
         except Exception as e:
-            msgbox.showerror(
-                "Błąd podglądu PDF",
-                str(e)
-            )
+            msgbox.showerror("Błąd podglądu PDF", str(e))
 
     def _on_overlay_ready(self, result_pdf):
-        """
-        Dostajemy gotowy PDF z overlay
-        """
+        """Dostajemy gotowy PDF z overlay"""
         self._overlay_result_pdf = result_pdf
 
-    def electronic_sign(self):
-        # --- PODPIS CYFROWY ---
-        # właściwe podpisanie certyfikatem
-        # sprawdzenie śceżki pliku
-        raw_path = Path(self.EntryCert.get().strip())
-        if not raw_path:
-            msgbox.showwarning("Brak pliku", "Nie wybrano pliku certyfikatu do podglądu.")
-            return
-        CERT_PATH = raw_path
-        if not CERT_PATH.exists():
-            msgbox.showerror(
-                "Plik nie istnieje",
-                f"Wskazany plik certyfikatu nie istnieje:\n{CERT_PATH}"
-            )
-            return
-        elif not CERT_PATH.is_file():
-            msgbox.showerror(
-                "Nieprawidłowa ścieżka",
-                "Wskazana ścieżka do certyfikatu nie jest plikiem."
-            )
-            return
-        elif CERT_PATH.suffix.lower() != ".p12":
-            msgbox.showerror(
-                "Nieprawidłowy format",
-                "Wybrany plik nie jest certyfikatem p12."
-            )
-            return
+    def sign_pdf(self):
+        pdf_overlay = Path(self._overlay_result_pdf)
 
-        CERT_PATH = self.EntryCert.get()
-        CERT_PASSWORD = b""
-        ORIG_PDF = self.EntryORIG_PDF.get()
-
-        overlay_pdf = getattr(self, "_overlay_result_pdf", None)
-        if overlay_pdf and overlay_pdf.exists():
-            SIG_PDF = overlay_pdf
-        else:
-            SIG_PDF = ORIG_PDF
-        FINAL_PDF = self.EntryFINAL_PDF.get()
-        SIGN_TEXT = self.EntryComment.get()
-        FIELD_NAME = self.get_next_signature_name(SIG_PDF)
+        if not pdf_overlay.exists():
+            msgbox.showerror("Błąd", "Wybrany plik PDF nie istnieje.")
+            return
 
         try:
-            signer = signers.SimpleSigner.load_pkcs12(
-                pfx_file=CERT_PATH, passphrase=CERT_PASSWORD
+            # def __init__(self, parent, pdf_overlay, pdf_orig, pdf_final, logo_path, comment, cert, on_done=None):
+            self._overlay = Sign(
+                parent=self.window,
+                pdf_overlay=pdf_overlay,
+                pdf_orig=self.EntryORIG_PDF.get(),
+                pdf_final=self.EntryFINAL_PDF.get(),
+                logo_path=self.EntryLogo.get(),
+                comment=self.EntryComment.get(),
+                cert=self.EntryCert.get(),
+                on_done=lambda result_pdf: setattr(self, "result_pdf", result_pdf),
             )
+            self._overlay.electronic_sign()
 
-            with open(SIG_PDF, "rb") as inf:
-                writer = IncrementalPdfFileWriter(inf)
-
-                with open(FINAL_PDF, "wb") as outf:
-                    signers.sign_pdf(
-                        writer,
-                        signers.PdfSignatureMetadata(
-                            field_name=FIELD_NAME,
-                            reason=SIGN_TEXT,
-                            location="dilmark sp. z o.o.",
-                        ),
-                        signer=signer,
-                        output=outf,  # wynikowy PDF
-                    )
-            logging.info(f"Podpisano plik {SIG_PDF} i zapisano jako: {FINAL_PDF}")
-            os.system(f"xdg-open {FINAL_PDF}")
         except Exception as e:
-            msgbox.showerror(
-                "Błąd podpisu elektronicznego",
-                f"Wystąpił błąd podczas podpisywania dokumentu.\n\n"
-                f"Szczegóły:\n{e}"
-            )
+            msgbox.showerror("Błąd podglądu PDF", str(e))
+        self.LabelCoord.configure(
+            text=f"Dokument został podpisany: {self.result_pdf}"
+        )
+        print_info(
+            f"Dokument został podpisany: {self.result_pdf}"
+        )
+        # Wyświetl podpisany pdf
+        os.system(f"xdg-open {self.result_pdf}")
         # sprzątanie tylko jeżeli faktycznie użyliśmy overlay
-        if overlay_pdf and overlay_pdf.exists():
-            overlay_pdf.unlink(missing_ok=True)
+        if self._overlay_result_pdf and self._overlay_result_pdf.exists():
+            self._overlay_result_pdf.unlink(missing_ok=True)
             del self._overlay_result_pdf
         # Zapisanie ustawień
         self.save_app_config()
         os.system("timedatectl set-ntp true")
-
-    def get_next_signature_name(self, pdf_path, base="Signature"):
-        existing = self.list_signature_fields(pdf_path)
-        i = 1
-        while f"{base}{i}" in existing:
-            i += 1
-        return f"{base}{i}"
-
-    def list_signature_fields(self, pdf_path):
-        with open(pdf_path, "rb") as f:
-            reader = PdfFileReader(f)
-
-            root = reader.root
-            if "/AcroForm" not in root:
-                return []  # brak formularza = brak podpisów
-
-            acroform = root["/AcroForm"]
-            if "/Fields" not in acroform:
-                return []
-
-            fields = acroform["/Fields"]
-
-            sig_fields = []
-            for field in fields:
-                field_obj = field.get_object()
-                if field_obj.get("/FT") == "/Sig":
-                    sig_fields.append(field_obj.get("/T"))
-
-            return sig_fields
 
     def _bind_events(self):
         # obsługa zamknięcia okna

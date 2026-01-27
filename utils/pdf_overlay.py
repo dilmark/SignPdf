@@ -25,7 +25,7 @@ from utils import msgbox
 logger = logging.getLogger(__name__)
 
 
-class overlay:
+class Overlay:
     def __init__(self, parent, pdf_path, logo_path, comment, label_coord, on_done=None):
         logger.debug("Tworzę plik z graficznym podpisem i tekstem")
 
@@ -166,22 +166,22 @@ class overlay:
     def generate_sign(self):
         # Data
         data = datetime.now().strftime("%d.%m.%Y").replace('"', "")
-        raw_path = Path(self.logo_path)
-        if not raw_path:
+        logo_raw_path = Path(self.logo_path)
+        if not logo_raw_path:
             msgbox.showwarning("Brak pliku", "Nie wybrano pliku png do podglądu.")
             return
-        sig_path = raw_path
-        if not sig_path.exists():
+        logo_path = logo_raw_path
+        if not logo_path.exists():
             msgbox.showerror(
-                "Plik nie istnieje", f"Wskazany obraz popdisu nie istnieje:\n{sig_path}"
+                "Plik nie istnieje", f"Wskazany obraz popdisu nie istnieje:\n{logo_path}"
             )
             return
-        elif not sig_path.is_file():
+        elif not logo_path.is_file():
             msgbox.showerror(
                 "Nieprawidłowa ścieżka", "Wskazana obraz popdisu nie jest plikiem."
             )
             return
-        elif sig_path.suffix.lower() != ".png":
+        elif logo_path.suffix.lower() != ".png":
             msgbox.showerror(
                 "Nieprawidłowy format", "Wybrany obraz popdisu nie jest dokumentem png."
             )
@@ -206,7 +206,7 @@ class overlay:
         pdf_y = page_height - self.coordinations["y"]
 
         # Wstawienie PNG podpisu
-        sig_img = ImageReader(sig_path)
+        sig_img = ImageReader(logo_path)
         c.drawImage(
             sig_img,
             pdf_x,
@@ -246,10 +246,10 @@ class overlay:
             self.on_done(signed_overlay_pdf)
 
         self.LabelCoord.configure(
-            text=f"Podpis wstawiony → {signed_overlay_pdf.name} - stronia: {self.page_index + 1}, współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
+            text=f"Konfiguracja: Podpis zostanie wstawiony → strona: {self.page_index + 1}, współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
         )
-        print_info(
-            f"Podpis wstawiony - strona: {self.page_index} współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
+        logger.info(
+            f"Podpis graficzny przygotowany {signed_overlay_pdf} dla dokumentu {pdf_path} - strona: {self.page_index} współrzędne: {self.coordinations['x']}x{self.coordinations['y']}"
         )
 
         # sprzątanie
