@@ -143,12 +143,12 @@ class PodpisApp:
             text_color="darkgreen",
             font=my_font,
         )
-        self.InfoLine2 = customtkinter.CTkLabel(
+        self.InfoLine2 = tk.Label(
             self.InfoFrameUP,
             text="NIP: 652 175 42 36\n43-502, Czechowice-Dziedzice\nul. Legionów 87A",
             font=my_font,
         )
-        self.InfoLine3 = customtkinter.CTkLabel(
+        self.InfoLine3 = tk.Label(
             self.InfoFrameUP,
             text=(
                 "napisany przez:\n"
@@ -171,10 +171,10 @@ class PodpisApp:
             self.InfoFrameDOWN, fg_color="transparent", border_width=1
         )
         # Przycisk - Wybierz plik certyfikatu do podpisu
-        self.ButtonCert = customtkinter.CTkButton(
+        self.ButtonCert = tk.Button(
             self.RightFrame,
-            text="Wybierz plik certyfikatu",
-            width=170,
+            text="Wybierz certyfikat",
+            width=15,
             command=lambda: self.open_dialog(
                 self.EntryCert, "Otwórz plik certyfikatu", "p12", "in"
             ),
@@ -182,10 +182,10 @@ class PodpisApp:
         # Pole wyboru certyfikatu
         self.EntryCert = customtkinter.CTkEntry(self.RightFrame, width=450)
         # Pole wyboru pliku loga
-        self.ButtonLogo = customtkinter.CTkButton(
+        self.ButtonLogo = tk.Button(
             self.RightFrame,
             text="Wybierz logo",
-            width=170,
+            width=15,
             command=lambda: self.open_dialog(
                 self.EntryLogo, "Otwórz plik logo", "png", "in"
             ),
