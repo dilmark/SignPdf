@@ -20,7 +20,7 @@ DEFAULT_CONFIG = {
 }
 
 
-class Config:
+class AppConfig:
     def __init__(self):
         self.data = DEFAULT_CONFIG.copy()
         self.config_load()
@@ -36,4 +36,4 @@ class Config:
             json.dump(self.data, f, indent=2, ensure_ascii=False)
 
 
-config = Config()
+app_config = AppConfig()

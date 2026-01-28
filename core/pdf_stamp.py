@@ -13,7 +13,6 @@ import tkinter as tk
 from pathlib import Path
 from datetime import datetime
 from PIL import Image, ImageTk
-from utils.msgbox import print_info
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rcanvas
@@ -24,7 +23,7 @@ from utils import msgbox
 logger = logging.getLogger(__name__)
 
 
-class Overlay:
+class PdfStampPreview:
     def __init__(self, parent, pdf_path, logo_path, comment, on_done=None):
         logger.debug("Tworzę plik z graficznym podpisem i tekstem")
 
@@ -46,7 +45,7 @@ class Overlay:
         self.sign_x = None
         self.sign_y = None
         self.width = 0
-        self.hight = 0
+        self.height = 0
 
     def preview_pdf(self):
         # sprawdzenie śceżki pliku
@@ -128,7 +127,7 @@ class Overlay:
 
         self.preview_img = ImageTk.PhotoImage(img)
         self.width = self.pix.width
-        self.hight = self.pix.height
+        self.height = self.pix.height
 
         self.canvas.config(width=self.pix.width, height=self.pix.height)
         self.canvas.delete("all")
@@ -239,5 +238,5 @@ class Overlay:
         )
         # zapamiętujemy ścieżkę do dalszego podpisu
         if self.on_done:
-            self.on_done(pdf_stamp_path, self.page_index, self.width, self.hight)
+            self.on_done(pdf_stamp_path, self.page_index, self.width, self.height)
 

@@ -16,17 +16,17 @@ from tkcalendar import DateEntry
 from tkinter import ttk, filedialog
 from pathlib import Path
 from datetime import datetime
-from utils.app_config import config
+from config.app_config import app_config
 from utils import msgbox
-from utils.msgbox import print_info
-from utils.pdf_stamp import Overlay
-from utils.pdf_sign import Sign
+from utils import print_info
+from core.pdf_stamp import PdfStampPreview
+from core.pdf_sign import PdfSigner
 
 # logger modułu
 logger = logging.getLogger(__name__)
 
 
-class PodpisApp:
+class SignPdfApp:
     def __init__(self):
         logger.debug("Tworzę okno główne")
 
@@ -37,10 +37,10 @@ class PodpisApp:
         self.window.geometry("900x300")
         self.window.iconphoto(False, tk.PhotoImage(file="utils/icon.png"))
 
-        self._pdf_stamp = Path("/dev/null")
-        self._sign_with_stamp = False
+        self.stamp_pdf_path = Path("/tmp")
+        self.use_visual_stamp = False
         self.page_index = 0
-        self.hight = 0
+        self.height = 0
         self.width = 0
 
         # tworzenie GUI
@@ -105,12 +105,19 @@ class PodpisApp:
         self.FrameDown = customtkinter.CTkFrame(self.tab_podpis, border_width=1)
         self.FrameDown.grid(row=1, column=0, padx=3, pady=0, sticky="sew")
 
+        # CheckBox usuń oryginał
+        self.VarDeleteSourcePdf = tk.BooleanVar(value=False)
+        self.CheckBoxDeleteSourcePdf = customtkinter.CTkCheckBox(
+            self.Frame,
+            text="Usuń oryginał",
+            variable=self.VarDeleteSourcePdf,
+        )
+        self.CheckBoxDeleteSourcePdf.grid(row=0, column=1, padx=5, pady=5, sticky="we")
         # Label
         self.MainLabel = customtkinter.CTkLabel(
             self.Frame, text="Konfiguracja programu"
         )
         self.MainLabel.grid(row=0, column=2, padx=5, pady=5, sticky="we")
-
         # Przycisk - Wybierz plik do podpisu
         self.ButtonORIG_PDF = customtkinter.CTkButton(
             self.Frame,
@@ -148,7 +155,7 @@ class PodpisApp:
         self.ButtonCoordinates = customtkinter.CTkButton(
             self.Frame,
             text="Wstaw podpis\ni podpisz",
-            command=self.make_pdf_stamp,
+            command=self.create_visual_stamp,
         )
         self.ButtonCoordinates.grid(row=4, column=1, padx=5, pady=35, sticky="we")
 
@@ -156,7 +163,7 @@ class PodpisApp:
         self.ButtonSIGN = customtkinter.CTkButton(
             self.Frame,
             text="Tylko podpisz\ndokument",
-            command=self.sign_pdf_only,
+            command=self.sign_without_stamp,
         )
         self.ButtonSIGN.grid(row=4, column=2, padx=5, pady=35, sticky="e")
 
@@ -204,6 +211,36 @@ class PodpisApp:
             self.InfoFrameDOWN, text="Konfiguracja programu", font=my_font, width=250
         )
 
+        # dół lewa strona
+        # data i czas - ComboBox
+        self.LeftFrame = customtkinter.CTkFrame(
+            self.InfoFrameDOWN,
+            fg_color="transparent",
+            border_width=1,
+            height=80,
+            width=220,
+        )
+        self.VarNTP = tk.BooleanVar(value=True)
+        self.CheckBoxData = customtkinter.CTkCheckBox(
+            self.LeftFrame,
+            text="NTP",
+            variable=self.VarNTP,
+            command=self.toggle_ntp,
+        )
+        self.ButtonSetDate = tk.Button(
+            self.LeftFrame,
+            text="Ustaw czas",
+            width=8,
+            command=lambda: self.ustaw_czas())
+        # Pole daty
+        self.EntryDataSet = DateEntry(
+            self.LeftFrame, width=10, date_pattern="yyyy-mm-dd"
+        )
+        # Pole czasu - godziny i minuty
+        self.EntryTimeSet = customtkinter.CTkEntry(self.LeftFrame, width=55)
+        current_time = datetime.now().strftime("%H:%M")
+        self.EntryTimeSet.insert(0, current_time)
+
         # dół prawa strona
         self.RightFrame = customtkinter.CTkFrame(
             self.InfoFrameDOWN, fg_color="transparent", border_width=1
@@ -230,35 +267,6 @@ class PodpisApp:
         )
         self.EntryLogo = customtkinter.CTkEntry(self.RightFrame, width=450)
 
-        # data i czas - ComboBox
-        self.LeftFrame = customtkinter.CTkFrame(
-            self.InfoFrameDOWN,
-            fg_color="transparent",
-            border_width=1,
-            height=80,
-            width=220,
-        )
-        self.LeftFrame.grid(row=0, column=0, sticky="ns", padx=(0, 10))
-        self.CheckBoxData = customtkinter.CTkCheckBox(
-            self.LeftFrame, width=2, height=2, text=""
-        )
-        self.VarNTP = tk.BooleanVar(value=True)
-        self.CheckBoxData = customtkinter.CTkCheckBox(
-            self.LeftFrame,
-            text="NTP",
-            variable=self.VarNTP,
-            command=self.togle_ntp,
-        )
-        # Pole daty
-        self.EntryDataSet = DateEntry(
-            self.LeftFrame, width=10, date_pattern="yyyy-mm-dd"
-        )
-        # Pole czasu - godziny i minuty
-        self.EntryTimeSet = customtkinter.CTkEntry(self.LeftFrame, width=95)
-        self.EntryTimeSet.bind("<Return>", lambda e: self.ustaw_czas())
-        current_time = datetime.now().strftime("%H:%M:%S")
-        self.EntryTimeSet.insert(0, current_time)
-
         # rozmieszczenie elementów góra
         self.InfoFrameUP.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
         self.InfoFrameUP.grid_columnconfigure((0, 1), weight=1)
@@ -271,9 +279,11 @@ class PodpisApp:
         self.InfoFrameDOWN.grid_columnconfigure(1, weight=1)
 
         self.LeftFrame.grid_propagate(False)
-        self.CheckBoxData.grid(row=0, column=0, sticky="w", padx=5, pady=5)
-        self.EntryDataSet.grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        self.EntryTimeSet.grid(row=1, column=1, sticky="e", padx=5, pady=5)
+        self.LeftFrame.grid(row=0, column=0, sticky="ns", padx=(0, 0))
+        self.CheckBoxData.grid(row=0, column=0, sticky="w", padx=5, pady=9)
+        self.EntryTimeSet.grid(row=1, column=0, sticky="w", padx=5, pady=5)
+        self.ButtonSetDate.grid(row=0, column=1, sticky="we", padx=5, pady=5)
+        self.EntryDataSet.grid(row=1, column=1, sticky="we", padx=5, pady=5)
 
         self.RightFrame.grid(row=0, column=1, sticky="nsew")
         self.ButtonCert.grid(row=0, column=2, sticky="w", padx=5, pady=5)
@@ -281,37 +291,39 @@ class PodpisApp:
         self.ButtonLogo.grid(row=1, column=2, sticky="w", padx=5, pady=5)
         self.EntryLogo.grid(row=1, column=3, sticky="ew", padx=5, pady=5)
 
-        self.togle_ntp()
+        self.toggle_ntp()
         self.set_app_config()
 
     def set_app_config(self):
-        self.EntryORIG_PDF.insert(0, config.data["config_orig_path"])
-        self.EntryFINAL_PDF.insert(0, config.data["config_final_path"])
-        self.EntryComment.insert(0, config.data["config_comment"])
-        self.EntryCert.insert(0, config.data["config_cert"])
-        self.EntryLogo.insert(0, config.data["config_logo"])
+        self.EntryORIG_PDF.insert(0, app_config.data["config_orig_path"])
+        self.EntryFINAL_PDF.insert(0, app_config.data["config_final_path"])
+        self.EntryComment.insert(0, app_config.data["config_comment"])
+        self.EntryCert.insert(0, app_config.data["config_cert"])
+        self.EntryLogo.insert(0, app_config.data["config_logo"])
 
     def save_app_config(self):
         # zapisz dane do pliku konfiguracyjnego aplikacji
-        config.data["config_orig_path"] = self.EntryORIG_PDF.get()
-        config.data["config_final_path"] = self.EntryFINAL_PDF.get()
-        config.data["config_comment"] = self.EntryComment.get()
-        config.data["config_cert"] = self.EntryCert.get()
-        config.data["config_logo"] = self.EntryLogo.get()
-        config.config_save()
+        app_config.data["config_orig_path"] = self.EntryORIG_PDF.get()
+        app_config.data["config_final_path"] = self.EntryFINAL_PDF.get()
+        app_config.data["config_comment"] = self.EntryComment.get()
+        app_config.data["config_cert"] = self.EntryCert.get()
+        app_config.data["config_logo"] = self.EntryLogo.get()
+        app_config.config_save()
 
-    def togle_ntp(self):
+    def toggle_ntp(self):
         # print("Checkbox value:", self.VarNTP.get())
         if self.VarNTP.get():
             logger.info("Włączam NTP")
+            self.ButtonSetDate.grid_remove()
             self.EntryDataSet.grid_remove()
             self.EntryTimeSet.grid_remove()
-            os.system("timedatectl set-ntp true")
+            self.set_ntp(True)
         else:
             logger.info("Wyłączam NTP")
+            self.ButtonSetDate.grid()
             self.EntryDataSet.grid()
             self.EntryTimeSet.grid()
-            os.system("timedatectl set-ntp false")
+            self.set_ntp(False)
 
     def ustaw_czas(self):
         data = self.EntryDataSet.get().strip()
@@ -319,7 +331,7 @@ class PodpisApp:
         self.data_czas = f"{data} {czas}"
         print(self.data_czas)
         logger.debug(f"Zmieniam datę na: timedatectl set-time '{self.data_czas}'")
-        os.system(f"timedatectl set-time '{self.data_czas}'")
+        subprocess.run(["timedatectl", "set-time", str(self.data_czas)])
 
     def open_dialog(self, widget, tekst, type, inout):
         initial_dir_entry = Path(widget.get().strip())
@@ -360,8 +372,26 @@ class PodpisApp:
         new_path = path.with_name(path.stem + "_sign.pdf")
         self.EntryFINAL_PDF.insert(0, new_path)
 
-    def make_pdf_stamp(self):
-        self._sign_with_stamp = True
+    def set_ntp(self, enabled: bool):
+        value = "true" if enabled else "false"
+        try:
+            subprocess.run(
+                ["timedatectl", "set-ntp", value],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            logger.info("NTP ustawione na %s", value)
+        except subprocess.CalledProcessError as e:
+            logger.warning(
+                "Nie udało się ustawić NTP (%s): %s",
+                value,
+                e.stderr.strip(),
+            )
+
+    def create_visual_stamp(self):
+        self.use_visual_stamp = True
         orig_pdf = Path(self.EntryORIG_PDF.get().strip())
 
         if not orig_pdf.exists():
@@ -369,37 +399,37 @@ class PodpisApp:
             return
 
         try:
-            self._overlay = Overlay(
+            self._overlay = PdfStampPreview(
                 parent=self.window,
                 pdf_path=orig_pdf,
                 logo_path=self.EntryLogo.get(),
                 comment=self.EntryComment.get(),
-                on_done=self._on_stamp_ready,
+                on_done=self.on_stamp_ready,
             )
             self._overlay.preview_pdf()
 
         except Exception as e:
             msgbox.showerror("Błąd podglądu PDF", str(e))
 
-    def _on_stamp_ready(self, pdf_stamp_path, page_index, width, hight):
-        self._pdf_stamp = pdf_stamp_path
+    def on_stamp_ready(self, pdf_stamp_path, page_index, width, height):
+        self.stamp_pdf_path = pdf_stamp_path
         self.page_index = page_index
         self.width = width
-        self.hight = hight
+        self.height = height
         self.sign_pdf()
 
-    def sign_pdf_only(self):
-        self._sign_with_stamp = False
+    def sign_without_stamp(self):
+        self.use_visual_stamp = False
         # jeżeli plik pieczątki pdf nie powstał to podstawiamy
         # dowolny katalog aby pyhanko podpisywał bez użycia stamp
-        self._pdf_stamp = Path("/tmp")
+        self.stamp_pdf_path = Path("/tmp")
         self.sign_pdf()
 
     def sign_pdf(self):
         try:
-            self._overlay = Sign(
+            self._overlay = PdfSigner(
                 parent=self.window,
-                pdf_stamp=self._pdf_stamp,
+                pdf_stamp=self.stamp_pdf_path,
                 pdf_orig=self.EntryORIG_PDF.get(),
                 pdf_final=self.EntryFINAL_PDF.get(),
                 logo_path=self.EntryLogo.get(),
@@ -407,26 +437,43 @@ class PodpisApp:
                 cert=self.EntryCert.get(),
                 page_index=self.page_index,
                 width=self.width,
-                hight=self.hight,
-                _sign_with_stamp=self._sign_with_stamp,
+                height=self.height,
+                use_visual_stamp=self.use_visual_stamp,
                 on_done=lambda result_pdf: setattr(self, "result_pdf", result_pdf),
             )
-            self._overlay.electronic_sign()
+            self._overlay.sign()
 
         except Exception as e:
             msgbox.showerror("Błąd podglądu PDF", str(e))
-        self.LabelCoord.configure(text=f"Dokument {Path(self.EntryORIG_PDF.get(),).name} został podpisany: {Path(self.result_pdf).name}")
+            return
+        
+        self.LabelCoord.configure(
+            text=f"Dokument {Path(self.EntryORIG_PDF.get()).name} został podpisany: {Path(self.result_pdf).name}"
+        )
         print_info(f"Dokument został podpisany: {self.result_pdf}")
-        # Wyświetl podpisany pdf
-        os.system(f"xdg-open {self.result_pdf}")
-        # sprzątanie tylko jeżeli faktycznie użyliśmy overlay
-        if self._pdf_stamp and self._pdf_stamp.exists():
-            self._pdf_stamp.unlink(missing_ok=True)
-            del self._pdf_stamp
-            # self._pdf_stamp=Path("dev/null")
         # Zapisanie ustawień
         self.save_app_config()
-        os.system("timedatectl set-ntp true")
+        self.set_ntp(True)
+        # Wyświetl podpisany pdf
+        subprocess.run(["xdg-open", str(self.result_pdf)])
+        # usuń podpisywany plik jeżeli ChecBox
+        if self.VarDeleteSourcePdf.get():
+            src = Path(self.EntryORIG_PDF.get())
+            logger.warning(f'Usuwam plik źródłowy do podpisu {src}')
+            if src.exists():
+                src.unlink()
+            else:
+                logger.warning(f"Plik źródłowy nie istnieje: {src}")
+        # sprzątanie tylko jeżeli faktycznie użyliśmy overlay
+        # Usuwanie tymczasowego pliku PDF
+        if hasattr(self, "stamp_pdf_path") and self.stamp_pdf_path and self.stamp_pdf_path.is_file():
+            tmp_pdf = self.stamp_pdf_path
+            if tmp_pdf.exists():
+                tmp_pdf.unlink()
+                logger.info(f"Usunięto tymczasowy plik: {tmp_pdf}")
+            else:
+                logger.warning(f"Tymczasowy plik nie istnieje: {tmp_pdf}")
+        del self.stamp_pdf_path
 
     def _bind_events(self):
         # obsługa zamknięcia okna
@@ -434,7 +481,7 @@ class PodpisApp:
 
     def on_close(self):
         # wychodząc z programu ustaw czas z NTP
-        os.system("timedatectl set-ntp true")
+        self.set_ntp(True)
         # Zapamiętaj ustawienia
         self.save_app_config()
         # ukrycie okna

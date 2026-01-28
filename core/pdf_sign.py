@@ -13,13 +13,13 @@ from pyhanko.sign import fields, signers
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.pdf_utils.reader import PdfFileReader
 from utils import msgbox
-from utils.msgbox import print_info
+from utils import print_info
 
 # logger modułu
 logger = logging.getLogger(__name__)
 
 
-class Sign:
+class PdfSigner:
     def __init__(
         self,
         parent,
@@ -31,8 +31,8 @@ class Sign:
         cert,
         page_index,
         width,
-        hight,
-        _sign_with_stamp,
+        height,
+        use_visual_stamp,
         on_done=None,
     ):
         print_info("Tworzę plik z graficznym podpisem i tekstem")
@@ -46,21 +46,15 @@ class Sign:
         self.cert = cert
         self.page_index = page_index
         self.width = width
-        self.hight = hight
-        self._sign_with_stamp = _sign_with_stamp
+        self.height = height
+        self._sign_with_stamp = use_visual_stamp
         self.on_done = on_done
 
-    def electronic_sign(self):
+    def sign(self):
         # --- PODPIS CYFROWY ---
         # właściwe podpisanie certyfikatem
         # sprawdzenie śceżki pliku
-        cert_path = Path(self.cert)
-        if not cert_path:
-            msgbox.showwarning(
-                "Brak pliku", "Nie wybrano pliku certyfikatu do podglądu."
-            )
-            return
-        CERT_PATH = cert_path
+        CERT_PATH = Path(self.cert)
         if not CERT_PATH.exists():
             msgbox.showerror(
                 "Plik nie istnieje",
@@ -79,55 +73,54 @@ class Sign:
             )
             return
 
-        CERT_PASSWORD = b""
-        ORIG_PDF = self.pdf_orig
-        STAMP_PDF = self.pdf_stamp_path
-        FINAL_PDF = self.pdf_final
-        SIGN_TEXT = self.comment
-        FIELD_NAME = self.get_next_signature_name(ORIG_PDF)
+        cert_password = b""
+        source_pdf_path = self.pdf_orig
+        stamp_pdf_path = self.pdf_stamp_path
+        output_pdf_path = self.pdf_final
+        reason_text = self.comment
+        field_name = self.get_next_signature_name(source_pdf_path)
 
         try:
             signer = signers.SimpleSigner.load_pkcs12(
-                pfx_file=CERT_PATH, passphrase=CERT_PASSWORD
+                pfx_file=CERT_PATH, passphrase=cert_password
             )
-            if self._sign_with_stamp and STAMP_PDF.is_file():
-            # if STAMP_PDF.is_file():
+            if self._sign_with_stamp and stamp_pdf_path.is_file():
                 # podpis wraz z pdf_stamp
-                with open(ORIG_PDF, "rb") as inf:
+                with open(source_pdf_path, "rb") as inf:
                     writer = IncrementalPdfFileWriter(inf)
                     fields.append_signature_field(
                         writer, sig_field_spec=fields.SigFieldSpec(
-                            FIELD_NAME, box=(0, 0, self.width, self.hight),on_page=self.page_index
+                            field_name, box=(0, 0, self.width, self.height),on_page=self.page_index
                         )
                     )
-                    meta = signers.PdfSignatureMetadata(field_name=FIELD_NAME,reason=SIGN_TEXT)
+                    meta = signers.PdfSignatureMetadata(field_name=field_name,reason=reason_text)
                     pdf_signer = signers.PdfSigner(
                         meta, signer=signer,
-                        stamp_style=stamp.StaticStampStyle.from_pdf_file(STAMP_PDF)
+                        stamp_style=stamp.StaticStampStyle.from_pdf_file(stamp_pdf_path)
                     )
-                    with open(FINAL_PDF, 'wb') as outf:
+                    with open(output_pdf_path, 'wb') as outf:
                         pdf_signer.sign_pdf(writer, output=outf)
             else:
                 # Sam podpis bez logo
-                with open(ORIG_PDF, "rb") as inf:
+                with open(source_pdf_path, "rb") as inf:
                     writer = IncrementalPdfFileWriter(inf)
 
-                    with open(FINAL_PDF, "wb") as outf:
+                    with open(output_pdf_path, "wb") as outf:
                         signers.sign_pdf(
                             writer,
                             signers.PdfSignatureMetadata(
-                                field_name=FIELD_NAME,
-                                reason=SIGN_TEXT,
+                                field_name=field_name,
+                                reason=reason_text,
                                 location="dilmark sp. z o.o.",
                             ),
                             signer=signer,
                             output=outf,  # wynikowy PDF
                         )
 
-            logging.info(f"Podpisano plik {ORIG_PDF} i zapisano jako: {FINAL_PDF}")
+            logging.info(f"Podpisano plik {source_pdf_path} i zapisano jako: {output_pdf_path}")
             # zapamiętujemy ścieżkę do dalszego podpisu
             if self.on_done:
-                self.on_done(FINAL_PDF)
+                self.on_done(output_pdf_path)
 
         except Exception as e:
             msgbox.showerror(

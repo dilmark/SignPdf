@@ -19,7 +19,7 @@ https://www.gnu.org/licenses/gpl-3.0.en.html
 import logging
 import os
 
-from utils.app import PodpisApp
+from ui.app_window import SignPdfApp
 
 # Wyłącz IBus dla tej aplikacji - nie będzie wisiało przy zamykaniu
 os.environ["GTK_IM_MODULE"] = "none"
@@ -36,7 +36,7 @@ def main():
     )
 
     logging.info("START aplikacji")
-    app = PodpisApp()
+    app = SignPdfApp()
     app.run()
     logging.info("STOP aplikacji")
 
