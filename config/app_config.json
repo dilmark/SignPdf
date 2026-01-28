@@ -1,7 +1,0 @@
-{
-  "config_orig_path": "/home/mariusz/podpisany_sign123.pdf",
-  "config_final_path": "/home/mariusz/podpisany_sign1234.pdf",
-  "config_comment": "Przyjmuję zamówienie do realizacji.",
-  "config_cert": "/home/mariusz/.openssl/MariuszDyla.p12",
-  "config_logo": "/home/mariusz/Firma/podpisMariuszDyla.png"
-}
