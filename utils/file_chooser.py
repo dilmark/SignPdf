@@ -14,10 +14,12 @@ from datetime import datetime
 
 
 class FileChooser(tk.Toplevel):
-    def __init__(self, parent, start_path=".", extensions=None, on_select=None):
+    def __init__(
+        self, parent, start_path=".", extensions=None, title=None, on_select=None
+    ):
         super().__init__(parent)
 
-        self.title("Wybierz plik")
+        self.title(str(title))
         self.geometry("900x500")
 
         self.current_path = Path(start_path).resolve()

@@ -347,6 +347,7 @@ class SignPdfApp:
             self.window,
             start_path=initial_dir,
             extensions=[type],
+            title=tekst,
             on_select=on_selected,
         )
         self.window.wait_window(dlg)
