@@ -17,8 +17,8 @@ from tkinter import ttk, filedialog
 from pathlib import Path
 from datetime import datetime
 from config.app_config import app_config
-from utils import msgbox
-from utils import print_info
+from utils import msgbox, print_info
+from utils.file_chooser import FileChooser
 from core.pdf_stamp import PdfStampPreview
 from core.pdf_sign import PdfSigner
 
@@ -231,7 +231,8 @@ class SignPdfApp:
             self.LeftFrame,
             text="Ustaw czas",
             width=8,
-            command=lambda: self.ustaw_czas())
+            command=lambda: self.ustaw_czas(),
+        )
         # Pole daty
         self.EntryDataSet = DateEntry(
             self.LeftFrame, width=10, date_pattern="yyyy-mm-dd"
@@ -336,34 +337,34 @@ class SignPdfApp:
     def open_dialog(self, widget, tekst, type, inout):
         initial_dir_entry = Path(widget.get().strip())
         initial_dir = initial_dir_entry.parent
-        if inout == "in":
-            # okno dilogowe
-            file_path = filedialog.askopenfilename(
-                title=tekst,
-                filetypes=[("Pliki " + type, "*." + type)],
-                initialdir=str(initial_dir),
-            )
+        # okno dilogowe
+        self.file_path = None
 
-            if not file_path:
-                return  # anulowano
-            widget.delete(0, "end")
-            widget.insert(0, file_path)
+        def on_selected(path):
+            self.file_path = path
+
+        dlg = FileChooser(
+            self.window,
+            start_path=initial_dir,
+            extensions=[type],
+            on_select=on_selected,
+        )
+        self.window.wait_window(dlg)
+
+        if not self.file_path:
+            return  # anulowano
+        widget.delete(0, "end")
+
+        if inout == "in":
+            widget.insert(0, self.file_path)
             self.rewrite_data()
             logging.info(f"Wybrano plik do odczytu: {tekst}")
         else:
-            # okno dilogowe
-            file_path = filedialog.asksaveasfilename(
-                title=tekst,
-                filetypes=[("Pliki " + type, "*." + type)],
-                initialdir=str(initial_dir),
-            )
-
-            if not file_path:
-                return  # anulowano
-            widget.delete(0, "end")
-            path = Path(file_path)
-            new_path = path.with_name(path.stem + "_sign.pdf")
+            new_path = Path(self.file_path).with_name(Path(self.file_path).stem + "_sign.pdf")
             widget.insert(0, new_path)
+            # path = Path(self.file_path)
+            # new_path = path.with_name(path.stem + "_sign.pdf")
+            # widget.insert(0, new_path)
             logging.info(f"Wybrano plik do zapisu: {tekst}")
 
     def rewrite_data(self):
@@ -446,7 +447,7 @@ class SignPdfApp:
         except Exception as e:
             msgbox.showerror("Błąd podglądu PDF", str(e))
             return
-        
+
         self.LabelCoord.configure(
             text=f"Dokument {Path(self.EntryORIG_PDF.get()).name} został podpisany: {Path(self.result_pdf).name}"
         )
@@ -459,14 +460,18 @@ class SignPdfApp:
         # usuń podpisywany plik jeżeli ChecBox
         if self.VarDeleteSourcePdf.get():
             src = Path(self.EntryORIG_PDF.get())
-            logger.warning(f'Usuwam plik źródłowy do podpisu {src}')
+            logger.warning(f"Usuwam plik źródłowy do podpisu {src}")
             if src.exists():
                 src.unlink()
             else:
                 logger.warning(f"Plik źródłowy nie istnieje: {src}")
         # sprzątanie tylko jeżeli faktycznie użyliśmy overlay
         # Usuwanie tymczasowego pliku PDF
-        if hasattr(self, "stamp_pdf_path") and self.stamp_pdf_path and self.stamp_pdf_path.is_file():
+        if (
+            hasattr(self, "stamp_pdf_path")
+            and self.stamp_pdf_path
+            and self.stamp_pdf_path.is_file()
+        ):
             tmp_pdf = self.stamp_pdf_path
             if tmp_pdf.exists():
                 tmp_pdf.unlink()
