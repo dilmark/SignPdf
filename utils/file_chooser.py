@@ -14,9 +14,7 @@ from datetime import datetime
 
 
 class FileChooser(tk.Toplevel):
-    def __init__(
-        self, parent, start_path=".", extensions=None, on_select=None
-    ):
+    def __init__(self, parent, start_path=".", extensions=None, on_select=None):
         super().__init__(parent)
 
         self.title("Wybierz plik")
@@ -24,6 +22,7 @@ class FileChooser(tk.Toplevel):
 
         self.current_path = Path(start_path).resolve()
         self.on_select = on_select
+        self.show_hidden = tk.BooleanVar(value=False)
 
         self.search_var = tk.StringVar()
 
@@ -63,6 +62,13 @@ class FileChooser(tk.Toplevel):
         self.ext_entry.pack(side="left", padx=(5, 0))
         self.ext_entry.insert(0, ",".join(self.extensions))
         self.ext_entry.bind("<KeyRelease>", lambda e: self.refresh())
+
+        ttk.Checkbutton(
+            filter_line,
+            text="Pokaż ukryte",
+            variable=self.show_hidden,
+            command=self.refresh,
+        ).pack(side="left", padx=(10, 0))
 
         # odświeżanie po zmianie pola
         self.ext_entry.bind("<KeyRelease>", lambda e: self.refresh())
@@ -112,7 +118,7 @@ class FileChooser(tk.Toplevel):
 
         with os.scandir(self.current_path) as it:
             for entry in it:
-                if entry.name.startswith("."):
+                if not self.show_hidden.get() and entry.name.startswith("."):
                     continue  # 🧹 ukryte
 
                 if query and query not in entry.name.lower():
