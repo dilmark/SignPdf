@@ -8,12 +8,11 @@ GNU GPL v3
 import tkinter as tk
 import customtkinter
 import logging
-import os
 import subprocess
 
 
 from tkcalendar import DateEntry
-from tkinter import ttk, filedialog
+from tkinter import ttk
 from pathlib import Path
 from datetime import datetime
 from config.app_config import app_config
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class SignPdfApp:
-    def __init__(self):
+    def __init__(self, initial_pdf: Path | None = None):
         logger.debug("Tworzę okno główne")
 
         # główne okno aplikacji
@@ -37,6 +36,7 @@ class SignPdfApp:
         self.window.geometry("900x300")
         self.window.iconphoto(False, tk.PhotoImage(file="utils/icon.png"))
 
+        self.initial_pdf = initial_pdf
         self.stamp_pdf_path = Path("/tmp")
         self.use_visual_stamp = False
         self.page_index = 0
@@ -90,6 +90,7 @@ class SignPdfApp:
         # inicjalizacja zawartości zakładek
         self._create_podpis_tab()
         self._create_info_tab()
+        self.apply_initial_pdf()
 
     def _create_podpis_tab(self):
         # konfiguracja layoutu
@@ -391,6 +392,21 @@ class SignPdfApp:
                 value,
                 e.stderr.strip(),
             )
+
+    def apply_initial_pdf(self):
+        if not self.initial_pdf:
+            return
+
+        if not self.initial_pdf.exists():
+            return
+
+        self.EntryORIG_PDF.delete(0, "end")
+        self.EntryORIG_PDF.insert(0, str(self.initial_pdf))
+
+        # ustawia *_sign.pdf
+        self.rewrite_data()
+
+        logger.info(f"GUI: załadowano plik z CLI: {self.initial_pdf}")
 
     def create_visual_stamp(self):
         self.use_visual_stamp = True

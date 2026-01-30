@@ -18,7 +18,9 @@ https://www.gnu.org/licenses/gpl-3.0.en.html
 
 import logging
 import os
+import sys
 
+from pathlib import Path
 from ui.app_window import SignPdfApp
 
 # Wyłącz IBus dla tej aplikacji - nie będzie wisiało przy zamykaniu
@@ -34,9 +36,19 @@ def main():
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-
     logging.info("START aplikacji")
-    app = SignPdfApp()
+
+    initial_pdf = None
+
+    if len(sys.argv) > 1:
+        candidate = Path(sys.argv[1]).expanduser()
+        if candidate.exists() and candidate.is_file() and candidate.suffix.lower() == ".pdf":
+            initial_pdf = candidate
+            logging.info(f"CLI: podano plik PDF: {initial_pdf}")
+        else:
+            logging.warning(f"CLI: nieprawidłowy argument: {sys.argv[1]}")
+
+    app = SignPdfApp(initial_pdf=initial_pdf)
     app.run()
     logging.info("STOP aplikacji")
 
