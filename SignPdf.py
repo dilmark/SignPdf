@@ -106,8 +106,8 @@ def sign_no_gui(pdf_path: Path):
 
     try:
         signer.sign()
-    except Exception as e:
-        print(f"❌ Błąd podpisu: {e}")
+    except Exception as exc:
+        print(f"❌ Błąd podpisu: {exc}")
         return 2
 
     print(f"✅ Podpisano dokument: {output_pdf}")

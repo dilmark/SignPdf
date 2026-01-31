@@ -12,17 +12,20 @@ logger = logging.getLogger(__name__)
 
 
 def showinfo(title, message):
+    print(message)
     logger.info("%s: %s", title, message)
     messagebox.showinfo(title, message)
 
 
 def showwarning(title, message):
+    print(message)
     logger.warning("%s: %s", title, message)
     ask = messagebox.askyesno(title, message)
     return ask
 
 
 def showerror(title, message):
+    print(message)
     logger.error("%s: %s", title, message)
     messagebox.showerror(title, message)
 

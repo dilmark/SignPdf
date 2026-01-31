@@ -426,8 +426,8 @@ class SignPdfApp:
             )
             self._overlay.preview_pdf()
 
-        except Exception as e:
-            msgbox.showerror("Błąd podglądu PDF", str(e))
+        except Exception as exc:
+            msgbox.showerror("Błąd podglądu PDF", str(exc))
 
     def on_stamp_ready(self, pdf_stamp_path, page_index, width, height):
         self.stamp_pdf_path = pdf_stamp_path
@@ -461,8 +461,8 @@ class SignPdfApp:
             )
             self._overlay.sign()
 
-        except Exception as e:
-            msgbox.showerror("Błąd podglądu PDF", str(e))
+        except Exception as exc:
+            msgbox.showerror("Błąd podglądu PDF", str(exc))
             return
 
         self.LabelCoord.configure(

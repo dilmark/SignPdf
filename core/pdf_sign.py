@@ -12,8 +12,7 @@ from pyhanko import stamp
 from pyhanko.sign import fields, signers
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 from pyhanko.pdf_utils.reader import PdfFileReader
-from utils import msgbox
-from utils import print_info
+from utils import msgbox, print_info, pkcs12_needs_password, get_password
 
 # logger modułu
 logger = logging.getLogger(__name__)
@@ -73,7 +72,11 @@ class PdfSigner:
             )
             return
 
-        cert_password = b""
+        if pkcs12_needs_password(CERT_PATH):
+            print_info(f"Certyfikat wymaga podania hasła {CERT_PATH}")
+            cert_password = get_password(self.parent, CERT_PATH, max_attempts=3)
+        else:
+            cert_password = b""
         source_pdf_path = self.pdf_orig
         stamp_pdf_path = self.pdf_stamp_path
         output_pdf_path = self.pdf_final
@@ -121,11 +124,10 @@ class PdfSigner:
             # zapamiętujemy ścieżkę do dalszego podpisu
             if self.on_done:
                 self.on_done(output_pdf_path)
-
-        except Exception as e:
+        except Exception as exc:
             msgbox.showerror(
                 "Błąd podpisu elektronicznego",
-                f"Wystąpił błąd podczas podpisywania dokumentu.\n\nSzczegóły:\n{e}",
+                f"Wystąpił błąd podczas podpisywania dokumentu.\n\nSzczegóły:\n{exc}",
             )
 
     def get_next_signature_name(self, pdf_path, base="Signature"):
