@@ -20,6 +20,8 @@ import logging
 import argparse
 import os
 import sys
+import subprocess
+
 
 from pathlib import Path
 from ui.app_window import SignPdfApp
@@ -79,7 +81,17 @@ def parse_args():
         action="store_true",
         help="Podpisz dokument bez uruchamiania GUI",
     )
-    return parser.parse_args()
+
+    args = parser.parse_args()
+    # Walidacja
+    if args.pdf:
+        pdf_path = Path(args.pdf)
+        if not pdf_path.exists() or pdf_path.suffix.lower() != ".pdf":
+            sys.exit(f"ERROR: Podany plik PDF nie istnieje lub ma zły format: {args.pdf}")
+    elif args.cli:
+        sys.exit("ERROR: W trybie CLI musisz podać plik PDF do podpisu!")
+
+    return args
 
 
 def sign_no_gui(pdf_path: Path):
@@ -111,6 +123,7 @@ def sign_no_gui(pdf_path: Path):
         return 2
 
     print(f"✅ Podpisano dokument: {output_pdf}")
+    subprocess.run(["xdg-open", str(output_pdf)])
     return 0
 
 

@@ -34,7 +34,7 @@ class SignPdfApp:
         branch, version = self.get_git_info()
         self.window.title(f"Podpis elektroniczny dokumentów PDF {branch} {version}")
         self.window.geometry("900x300")
-        self.window.iconphoto(False, tk.PhotoImage(file="utils/icon.png"))
+        self.window.iconphoto(False, tk.PhotoImage(file="image/icon.png"))
 
         self.initial_pdf = initial_pdf
         self.stamp_pdf_path = Path("/tmp")
