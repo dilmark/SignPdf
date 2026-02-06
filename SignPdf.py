@@ -21,12 +21,14 @@ import argparse
 import os
 import sys
 import subprocess
+import fitz
 
 
 from pathlib import Path
 from ui.app_window import SignPdfApp
 from core.pdf_sign import PdfSigner
 from config.app_config import app_config
+from tkinter import simpledialog
 
 # Wyłącz IBus dla tej aplikacji - nie będzie wisiało przy zamykaniu
 os.environ["GTK_IM_MODULE"] = "none"
@@ -76,7 +78,10 @@ def parse_args():
         help="Ścieżka do pliku PDF",
     )
     parser.add_argument(
-        "--no_gui", "--cli", "-c", "-ng",
+        "--no_gui",
+        "--cli",
+        "-c",
+        "-ng",
         dest="cli",
         action="store_true",
         help="Podpisz dokument bez uruchamiania GUI",
@@ -87,7 +92,9 @@ def parse_args():
     if args.pdf:
         pdf_path = Path(args.pdf)
         if not pdf_path.exists() or pdf_path.suffix.lower() != ".pdf":
-            sys.exit(f"ERROR: Podany plik PDF nie istnieje lub ma zły format: {args.pdf}")
+            sys.exit(
+                f"ERROR: Podany plik PDF nie istnieje lub ma zły format: {args.pdf}"
+            )
     elif args.cli:
         sys.exit("ERROR: W trybie CLI musisz podać plik PDF do podpisu!")
 
@@ -100,6 +107,33 @@ def sign_no_gui(pdf_path: Path):
         return 1
 
     output_pdf = pdf_path.with_name(pdf_path.stem + "_sign.pdf")
+    # obsługa hasła dokumentu pdf gdy idziemy w trybie bez wskazywania pieczątki
+    pdf_pass = None
+    doc = fitz.open(pdf_path)
+    if doc.is_encrypted:
+        print("PDF jest zaszyfrowany")
+        if not doc.can_save_incrementally:
+            print("Ten dokument jest chroniony przed zmianami.")
+            raise ValueError("Ten dokument jest chroniony przed zmianami.")
+        authenticated = False
+        attemp = 0
+        while not authenticated and attemp < 3:
+            pdf_pass = simpledialog.askstring(
+                "Plik zabezpieczony", "Podaj hasło do pliku PDF:", show="*", parent=None
+            )
+
+            if pdf_pass is None:  # Użytkownik kliknął Anuluj
+                doc.close()
+                return
+
+            if doc.authenticate(pdf_pass):
+                authenticated = True
+            else:
+                attemp += 1
+                if attemp == 3:
+                    print("Nieprawidłowe hasło otwarcia dokumentu pdf")
+                else:
+                    print("Błąd", "Nieprawidłowe hasło!")
 
     signer = PdfSigner(
         parent=None,  # brak GUI
@@ -113,6 +147,7 @@ def sign_no_gui(pdf_path: Path):
         width=0,
         height=0,
         use_visual_stamp=False,
+        pdf_password=pdf_pass,
         on_done=None,
     )
 

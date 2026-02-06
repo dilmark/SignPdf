@@ -18,6 +18,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rcanvas
 from reportlab.lib.utils import ImageReader
 from utils import msgbox
+from tkinter import simpledialog
 
 # logger modułu
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ class PdfStampPreview:
         self.raw_path = Path(pdf_path)
         self.logo_path = logo_path
         self.comment = comment
+        self.pdf_password = None
         self.on_done = on_done
 
         self.doc = None
@@ -70,6 +72,34 @@ class PdfStampPreview:
             return
 
         self.doc = fitz.open(pdf_path)
+        # sprawdzmy czy pdf jest zabezpieczony przed otwarciem
+        if self.doc.is_encrypted:
+            print("PDF jest zaszyfrowany")
+            if not self.doc.can_save_incrementally:
+                print("Ten dokument jest chroniony przed zmianami.")
+                raise ValueError("Ten dokument jest chroniony przed zmianami.")
+            authenticated = False
+            attemp = 0
+            while not authenticated and attemp<3:
+                self.pdf_password = simpledialog.askstring(
+                    "Plik zabezpieczony", 
+                    "Podaj hasło do pliku PDF:", 
+                    show='*', 
+                    parent=self.parent
+                )
+                
+                if self.pdf_password is None: # Użytkownik kliknął Anuluj
+                    self.doc.close()
+                    return
+                
+                if self.doc.authenticate(self.pdf_password):
+                    authenticated = True
+                else:
+                    attemp += 1
+                    if attemp == 3:
+                        raise ValueError("Nieprawidłowe hasło otwarcia dokumentu pdf")
+                    else:
+                        msgbox.showerror("Błąd", "Nieprawidłowe hasło!")
         self.page_index = 0
         self.page_count = self.doc.page_count
 
@@ -238,5 +268,5 @@ class PdfStampPreview:
         )
         # zapamiętujemy ścieżkę do dalszego podpisu
         if self.on_done:
-            self.on_done(pdf_stamp_path, self.page_index, self.width, self.height)
+            self.on_done(pdf_stamp_path, self.page_index, self.width, self.height, self.pdf_password)
 

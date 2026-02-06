@@ -429,17 +429,20 @@ class SignPdfApp:
         except Exception as exc:
             msgbox.showerror("Błąd podglądu PDF", str(exc))
 
-    def on_stamp_ready(self, pdf_stamp_path, page_index, width, height):
+    def on_stamp_ready(self, pdf_stamp_path, page_index, width, height, pdf_password):
         self.stamp_pdf_path = pdf_stamp_path
         self.page_index = page_index
         self.width = width
         self.height = height
+        self.pdf_password = pdf_password
         self.sign_pdf()
 
     def sign_without_stamp(self):
         self.use_visual_stamp = False
+        # nie pytamy o hasło do otwarcia dokumentu pdf
+        self.pdf_password = None
         # jeżeli plik pieczątki pdf nie powstał to podstawiamy
-        # dowolny katalog aby pyhanko podpisywał bez użycia stamp
+        # dowolny katalog aby podpisywać bez użycia stamp
         self.stamp_pdf_path = Path("/tmp")
         self.sign_pdf()
 
@@ -457,6 +460,7 @@ class SignPdfApp:
                 width=self.width,
                 height=self.height,
                 use_visual_stamp=self.use_visual_stamp,
+                pdf_password=self.pdf_password,
                 on_done=lambda result_pdf: setattr(self, "result_pdf", result_pdf),
             )
             self._overlay.sign()
