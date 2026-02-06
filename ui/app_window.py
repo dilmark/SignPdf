@@ -346,7 +346,7 @@ class SignPdfApp:
 
         dlg = FileChooser(
             self.window,
-            start_path=initial_dir,
+            start_path=str(initial_dir),
             extensions=[type],
             title=tekst,
             on_select=on_selected,

@@ -6,7 +6,6 @@ GNU GPL v3
 """
 
 import logging
-from asn1crypto.core import Null
 import pikepdf
 import tempfile
 import fitz
@@ -58,9 +57,7 @@ class PdfSigner:
         self.on_done = on_done
 
     def sign(self):
-        # --- PODPIS CYFROWY ---
-        # właściwe podpisanie certyfikatem
-        # sprawdzenie śceżki pliku
+        # właściwe podpisanie certyfikatem sprawdzenie śceżki pliku certyfikatu
         CERT_PATH = Path(self.cert)
         if not CERT_PATH.exists():
             msgbox.showerror(
@@ -79,12 +76,34 @@ class PdfSigner:
                 "Nieprawidłowy format", "Wybrany plik nie jest certyfikatem p12."
             )
             return
-
         if pkcs12_needs_password(CERT_PATH):
             print_info(f"Certyfikat wymaga podania hasła {CERT_PATH}")
             cert_password = get_password(self.parent, CERT_PATH, max_attempts=3)
         else:
             cert_password = b""
+
+        #sprawdzanie pliku do podpisu gdy jesteśmy w trybie bez pieczątki
+        if not self._sign_with_stamp:
+            # sprawdzenie śceżki pliku
+            if not self.pdf_orig:
+                msgbox.showwarning("Brak pliku", "Nie wybrano pliku PDF do podglądu.")
+                return
+            pdf_path = Path(self.pdf_orig)
+            if not pdf_path.exists():
+                msgbox.showerror(
+                    "Plik nie istnieje", f"Wskazany plik nie istnieje:\n{pdf_path}"
+                )
+                return
+            elif not pdf_path.is_file():
+                msgbox.showerror(
+                    "Nieprawidłowa ścieżka", "Wskazana ścieżka nie jest plikiem."
+                )
+                return
+            elif pdf_path.suffix.lower() != ".pdf":
+                msgbox.showerror(
+                    "Nieprawidłowy format", "Wybrany plik nie jest dokumentem PDF."
+                )
+                return
 
         source_pdf_path = self.pdf_orig
         stamp_pdf_path = self.pdf_stamp_path
@@ -93,7 +112,7 @@ class PdfSigner:
         field_name = self.get_next_signature_name(source_pdf_path)
         pdf_pass = self.pdf_password  # Hasło przekazane z PdfStampPreview
         
-        # obsługa hasła dokumentu pdf gdy idziemy w trybie bez wskazywania pieczątki
+        # pobranie hasła dokumentu pdf gdy idziemy w trybie bez wskazywania pieczątki
         if pdf_pass is None:
             self.doc = fitz.open(source_pdf_path)
             if self.doc.is_encrypted:
@@ -105,7 +124,7 @@ class PdfSigner:
                 attemp = 0
                 while not authenticated and attemp<3:
                     pdf_pass = simpledialog.askstring(
-                        "Plik zabezpieczony", 
+                        f"Próba {attemp+1} z 3", 
                         "Podaj hasło do pliku PDF:", 
                         show='*', 
                         parent=self.parent
@@ -123,6 +142,7 @@ class PdfSigner:
                             raise ValueError("Nieprawidłowe hasło otwarcia dokumentu pdf")
                         else:
                             msgbox.showerror("Błąd", "Nieprawidłowe hasło!")
+        # tworzenie tymczasowego dokumentu pdf gdy oryginał jest zaszyfrowany
         temp_pdf_path = None
         if pdf_pass is not None:
             # --- KROK 1: TWORZYMY CZYSTY PLIK TYMCZASOWY ---

@@ -82,7 +82,7 @@ class PdfStampPreview:
             attemp = 0
             while not authenticated and attemp<3:
                 self.pdf_password = simpledialog.askstring(
-                    "Plik zabezpieczony", 
+                    f"Próba {attemp+1} z 3", 
                     "Podaj hasło do pliku PDF:", 
                     show='*', 
                     parent=self.parent
