@@ -37,7 +37,7 @@ os.environ["XMODIFIERS"] = "@im=none"
 
 def main():
     logging.basicConfig(
-        filename="utils/SignPdf.log",
+        filename="config/SignPdf.log",
         filemode="a",
         level=logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -160,7 +160,6 @@ def sign_no_gui(pdf_path: Path):
     print(f"✅ Podpisano dokument: {output_pdf}")
     subprocess.run(["xdg-open", str(output_pdf)])
     return 0
-
 
 if __name__ == "__main__":
     main()

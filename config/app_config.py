@@ -6,9 +6,10 @@ GNU GPL v3
 """
 
 import json
+import os
 from pathlib import Path
 
-CONFIG_PATH = Path(__file__).parent / "app_config.json"
+CONFIG_PATH = Path("config/app_config.json")
 
 
 DEFAULT_CONFIG = {

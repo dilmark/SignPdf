@@ -9,6 +9,7 @@ import fitz
 import tempfile
 import logging
 import tkinter as tk
+import os
 
 from pathlib import Path
 from datetime import datetime
@@ -48,6 +49,14 @@ class PdfStampPreview:
         self.sign_y = None
         self.width = 0
         self.height = 0
+
+    def resource_path(self, relative_path):
+        """Metoda klasy do obsługi ścieżek w Nuitka"""
+        # __file__ to ui/app_window.py, więc dirname to folder ui/
+        current_dir = os.path.dirname(__file__)
+        # Wychodzimy poziom wyżej do głównego katalogu
+        base_path = os.path.abspath(os.path.join(current_dir, ".."))
+        return os.path.join(base_path, relative_path)
 
     def preview_pdf(self):
         # sprawdzenie śceżki pliku
@@ -221,7 +230,7 @@ class PdfStampPreview:
         text = "Podpisano: Mariusz Dyla"
         textData = f"dnia: {data}"
         textReason = self.comment or ""
-        pdfmetrics.registerFont(TTFont("Roboto", "utils/Roboto-MediumItalic.ttf"))
+        pdfmetrics.registerFont(TTFont("Roboto", self.resource_path("utils/Roboto-MediumItalic.ttf")))
 
         # Rozmiar strony PDF
         page = self.doc[self.coordinations["page"]]

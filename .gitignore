@@ -1,0 +1,17 @@
+# ---------------------------------
+# Cache Pythona
+# ---------------------------------
+__pycache__/
+*.pyc
+*.pyo
+
+/.venv*
+/.vscode
+*.pdf
+*.p12
+*.sh
+!/image/*.png
+/dist
+config/app_config.json
+SignPdf.log
+exported_code.txt

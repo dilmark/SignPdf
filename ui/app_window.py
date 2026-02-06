@@ -9,6 +9,7 @@ import tkinter as tk
 import customtkinter
 import logging
 import subprocess
+import os
 
 
 from tkcalendar import DateEntry
@@ -24,8 +25,15 @@ from core.pdf_sign import PdfSigner
 # logger modułu
 logger = logging.getLogger(__name__)
 
-
 class SignPdfApp:
+    def resource_path(self, relative_path):
+        """Metoda klasy do obsługi ścieżek w Nuitka"""
+        # __file__ to ui/app_window.py, więc dirname to folder ui/
+        current_dir = os.path.dirname(__file__)
+        # Wychodzimy poziom wyżej do głównego katalogu
+        base_path = os.path.abspath(os.path.join(current_dir, ".."))
+        return os.path.join(base_path, relative_path)
+        
     def __init__(self, initial_pdf: Path | None = None):
         logger.debug("Tworzę okno główne")
 
@@ -34,7 +42,10 @@ class SignPdfApp:
         branch, version = self.get_git_info()
         self.window.title(f"Podpis elektroniczny dokumentów PDF {branch} {version}")
         self.window.geometry("900x300")
-        self.window.iconphoto(False, tk.PhotoImage(file="image/icon.png"))
+        icon_path = self.resource_path("image/icon.png")
+        # Przechowujemy referencję do obrazu w self, żeby Python go nie usunął z pamięci
+        self.app_icon = tk.PhotoImage(file=icon_path)
+        self.window.iconphoto(False, self.app_icon)
 
         self.initial_pdf = initial_pdf
         self.stamp_pdf_path = Path("/tmp")
