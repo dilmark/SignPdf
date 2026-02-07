@@ -1,2 +1,2 @@
 BRANCH = 'main'
-VERSION = 'v1.2'
+VERSION = 'v1.3'
