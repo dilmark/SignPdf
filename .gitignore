@@ -12,6 +12,7 @@ __pycache__/
 *.sh
 !/image/*.png
 /dist
+!/dist/SignPdf
 config/app_config.json
 SignPdf.log
 exported_code.txt

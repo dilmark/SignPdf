@@ -9,8 +9,6 @@ import tkinter as tk
 import customtkinter
 import logging
 import subprocess
-import os
-
 
 from tkcalendar import DateEntry
 from tkinter import ttk
@@ -19,33 +17,35 @@ from datetime import datetime
 from config.app_config import app_config
 from utils import msgbox, print_info
 from utils.file_chooser import FileChooser
+from utils.paths import ROOT_DIR
+from utils.version import VERSION, BRANCH
 from core.pdf_stamp import PdfStampPreview
 from core.pdf_sign import PdfSigner
 
 # logger modułu
 logger = logging.getLogger(__name__)
 
+
 class SignPdfApp:
-    def resource_path(self, relative_path):
-        """Metoda klasy do obsługi ścieżek w Nuitka"""
-        # __file__ to ui/app_window.py, więc dirname to folder ui/
-        current_dir = os.path.dirname(__file__)
-        # Wychodzimy poziom wyżej do głównego katalogu
-        base_path = os.path.abspath(os.path.join(current_dir, ".."))
-        return os.path.join(base_path, relative_path)
-        
     def __init__(self, initial_pdf: Path | None = None):
         logger.debug("Tworzę okno główne")
 
         # główne okno aplikacji
         self.window = customtkinter.CTk()
-        branch, version = self.get_git_info()
-        self.window.title(f"Podpis elektroniczny dokumentów PDF {branch} {version}")
+        try:
+            from utils.version import BRANCH, VERSION
+        except ImportError:
+            BRANCH, VERSION = ("dev", "0.0.0")
+        self.window.title(f"Podpis elektroniczny dokumentów PDF {BRANCH} {VERSION}")
         self.window.geometry("900x300")
-        icon_path = self.resource_path("image/icon.png")
-        # Przechowujemy referencję do obrazu w self, żeby Python go nie usunął z pamięci
+        icon_path = ROOT_DIR / "image/icon.png"
         self.app_icon = tk.PhotoImage(file=icon_path)
         self.window.iconphoto(False, self.app_icon)
+
+        # Bindowanie klawiszy (Skróty klawiszowe)
+        self.window.bind("<F1>", lambda event: self._show_about())
+        self.window.bind("<Control-q>", lambda event: self.on_close())
+        self.window.bind("<Control-Q>", lambda event: self.on_close())
 
         self.initial_pdf = initial_pdf
         self.stamp_pdf_path = Path("/tmp")
@@ -58,35 +58,6 @@ class SignPdfApp:
         self._create_widgets()
         self._bind_events()
 
-    def get_git_info(self):
-        # Branch
-        try:
-            branch = (
-                subprocess.check_output(
-                    ["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                    stderr=subprocess.DEVNULL,
-                )
-                .decode()
-                .strip()
-            )
-        except Exception:
-            branch = "unknown"
-
-        # Najnowszy tag
-        try:
-            version = (
-                subprocess.check_output(
-                    ["git", "describe", "--tags", "--abbrev=0"],
-                    stderr=subprocess.DEVNULL,
-                )
-                .decode()
-                .strip()
-            )
-        except Exception:
-            version = "v0.0"
-
-        return branch, version
-
     def _create_widgets(self):
         # główny kontener zakładek
         self.tabview = ttk.Notebook(self.window)
@@ -95,12 +66,12 @@ class SignPdfApp:
         self.tab_info = ttk.Frame(self.tabview)
         # dodanie zakładek
         self.tabview.add(self.tab_podpis, text="Podpis")
-        self.tabview.add(self.tab_info, text="O programie")
+        self.tabview.add(self.tab_info, text="Konfiguracja")
         self.tabview.pack(fill="both", expand=True)
 
         # inicjalizacja zawartości zakładek
         self._create_podpis_tab()
-        self._create_info_tab()
+        self._create_config_tab()
         self.apply_initial_pdf()
 
     def _create_podpis_tab(self):
@@ -185,82 +156,50 @@ class SignPdfApp:
         )
         self.LabelCoord.grid(padx=3, pady=2, sticky="nwe")
 
-    def _create_info_tab(self):
-        # układ zakładki informacji
-        self.tab_info.columnconfigure(0, weight=1)
-        self.tab_info.rowconfigure(1, weight=1)
-
-        my_font = customtkinter.CTkFont(family="Roboto", size=14, weight="bold")
-        self.InfoFrameUP = customtkinter.CTkFrame(self.tab_info, border_width=0)
-
-        # informacje o firmie i autorze
-        self.InfoLine1 = customtkinter.CTkLabel(
-            self.InfoFrameUP,
-            text="\nProgram dla dilmark sp. z o. o.",
-            text_color="darkgreen",
-            font=my_font,
-        )
-        self.InfoLine2 = tk.Label(
-            self.InfoFrameUP,
-            text="NIP: 652 175 42 36\n43-502, Czechowice-Dziedzice\nul. Legionów 87A",
-            font=my_font,
-        )
-        self.InfoLine3 = tk.Label(
-            self.InfoFrameUP,
-            text=(
-                "napisany przez:\n"
-                "Mariusz Dyla\n"
-                "mail: mariusz.dyla@dilmark.pl\n"
-                "tel.: +48 602 47 47 18"
-            ),
-            font=my_font,
-        )
-
+    def _create_config_tab(self):
         # Sterowanie porgramem
-        self.InfoFrameDOWN = customtkinter.CTkFrame(self.tab_info, border_width=0)
-        # Label
-        self.LabelConf = customtkinter.CTkLabel(
-            self.InfoFrameDOWN, text="Konfiguracja programu", font=my_font, width=250
-        )
+        self.ConfigFrame = customtkinter.CTkFrame(self.tab_info, border_width=0)
 
-        # dół lewa strona
         # data i czas - ComboBox
-        self.LeftFrame = customtkinter.CTkFrame(
-            self.InfoFrameDOWN,
+        self.RightFrame = customtkinter.CTkFrame(
+            self.ConfigFrame,
             fg_color="transparent",
-            border_width=1,
-            height=80,
-            width=220,
+            border_width=0,
+            height=200,
+            # width=220,
         )
         self.VarNTP = tk.BooleanVar(value=True)
         self.CheckBoxData = customtkinter.CTkCheckBox(
-            self.LeftFrame,
+            self.RightFrame,
             text="NTP",
             variable=self.VarNTP,
             command=self.toggle_ntp,
         )
         self.ButtonSetDate = tk.Button(
-            self.LeftFrame,
+            self.RightFrame,
             text="Ustaw czas",
             width=8,
             command=lambda: self.ustaw_czas(),
         )
         # Pole daty
         self.EntryDataSet = DateEntry(
-            self.LeftFrame, width=10, date_pattern="yyyy-mm-dd"
+            self.RightFrame, width=10, date_pattern="yyyy-mm-dd"
         )
         # Pole czasu - godziny i minuty
-        self.EntryTimeSet = customtkinter.CTkEntry(self.LeftFrame, width=55)
+        self.EntryTimeSet = customtkinter.CTkEntry(self.RightFrame, width=55)
         current_time = datetime.now().strftime("%H:%M")
         self.EntryTimeSet.insert(0, current_time)
 
         # dół prawa strona
-        self.RightFrame = customtkinter.CTkFrame(
-            self.InfoFrameDOWN, fg_color="transparent", border_width=1
+        self.LeftFrame = customtkinter.CTkFrame(
+            self.ConfigFrame,
+            fg_color="transparent",
+            border_width=0,
+            # height=200,
         )
         # Przycisk - Wybierz plik certyfikatu do podpisu
         self.ButtonCert = tk.Button(
-            self.RightFrame,
+            self.LeftFrame,
             text="Wybierz certyfikat",
             width=15,
             command=lambda: self.open_dialog(
@@ -268,44 +207,81 @@ class SignPdfApp:
             ),
         )
         # Pole wyboru certyfikatu
-        self.EntryCert = customtkinter.CTkEntry(self.RightFrame, width=450)
+        self.EntryCert = customtkinter.CTkEntry(self.LeftFrame, width=450)
         # Pole wyboru pliku loga
         self.ButtonLogo = tk.Button(
-            self.RightFrame,
+            self.LeftFrame,
             text="Wybierz logo",
             width=15,
             command=lambda: self.open_dialog(
                 self.EntryLogo, "Otwórz plik logo", "png", "in"
             ),
         )
-        self.EntryLogo = customtkinter.CTkEntry(self.RightFrame, width=450)
+        self.EntryLogo = customtkinter.CTkEntry(self.LeftFrame, width=450)
 
-        # rozmieszczenie elementów góra
-        self.InfoFrameUP.grid(row=0, column=0, sticky="ew", padx=10, pady=10)
-        self.InfoFrameUP.grid_columnconfigure((0, 1), weight=1)
-        self.InfoLine1.grid(row=0, column=0, columnspan=2, pady=(10, 5))
-        self.InfoLine2.grid(row=1, column=0, padx=20, pady=5, sticky="w")
-        self.InfoLine3.grid(row=1, column=1, padx=20, pady=5, sticky="e")
-        # rozmieszczenie elementów dół
-        self.InfoFrameDOWN.grid(row=1, column=0, sticky="nsew", padx=10, pady=10)
-        self.InfoFrameDOWN.grid_columnconfigure(0, weight=0)
-        self.InfoFrameDOWN.grid_columnconfigure(1, weight=1)
+        self.ButtonInfo = tk.Button(
+            self.ConfigFrame,
+            text="O programie",
+            width=12,
+            command=lambda: self._show_about(),
+        )
 
-        self.LeftFrame.grid_propagate(False)
-        self.LeftFrame.grid(row=0, column=0, sticky="ns", padx=(0, 0))
-        self.CheckBoxData.grid(row=0, column=0, sticky="w", padx=5, pady=9)
-        self.EntryTimeSet.grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        self.ButtonSetDate.grid(row=0, column=1, sticky="we", padx=5, pady=5)
-        self.EntryDataSet.grid(row=1, column=1, sticky="we", padx=5, pady=5)
+        # rozmieszczenie elementów
+        self.ConfigFrame.grid(row=0, column=0, sticky="nsew", padx=10, pady=2)
+        self.ConfigFrame.grid_columnconfigure(0, weight=0)
+        self.ConfigFrame.grid_columnconfigure(1, weight=1)
 
-        self.RightFrame.grid(row=0, column=1, sticky="nsew")
-        self.ButtonCert.grid(row=0, column=2, sticky="w", padx=5, pady=5)
-        self.EntryCert.grid(row=0, column=3, sticky="ew", padx=5, pady=5)
-        self.ButtonLogo.grid(row=1, column=2, sticky="w", padx=5, pady=5)
-        self.EntryLogo.grid(row=1, column=3, sticky="ew", padx=5, pady=5)
+        self.LeftFrame.grid(row=0, column=0, sticky="ns", padx=10, pady=10)
+        self.ButtonCert.grid(row=0, column=2, sticky="w", padx=5, pady=8)
+        self.EntryCert.grid(row=0, column=3, sticky="ew", padx=5, pady=8)
+        self.ButtonLogo.grid(row=1, column=2, sticky="w", padx=5, pady=8)
+        self.EntryLogo.grid(row=1, column=3, sticky="ew", padx=5, pady=8)
+
+        self.RightFrame.grid_propagate(False)
+        self.RightFrame.grid(row=0, column=1, sticky="ns", padx=0, pady=2)
+        self.CheckBoxData.grid(row=0, column=0, sticky="w", padx=0, pady=19)
+        self.EntryTimeSet.grid(row=1, column=0, sticky="w", padx=0, pady=5)
+        self.ButtonSetDate.grid(row=0, column=1, sticky="we", padx=0, pady=5)
+        self.EntryDataSet.grid(row=1, column=1, sticky="we", padx=0, pady=5)
+        self.ButtonInfo.grid(row=1, column=1, sticky="se", padx=0, pady=5)
 
         self.toggle_ntp()
         self.set_app_config()
+
+    def _show_about(self):
+        """Wyświetla okno informacyjne"""
+        # Próba importu wersji z pliku generowanego przy budowaniu
+        about_win = customtkinter.CTkToplevel(self.window)
+        about_win.title("O programie")
+        about_win.geometry("350x180")
+        about_win.after(100, lambda: about_win.focus_get())  # Focus na nowe okno
+        about_win.transient(self.window)  # Powiązanie z głównym oknem
+        about_win.grab_set()  # Blokuje klikanie w okno główne (modalność)
+        about_win.bind("<Escape>", lambda e: about_win.destroy())
+
+        # Zawartość okna
+        customtkinter.CTkLabel(
+            about_win, text="SignPdf", font=("Roboto", 24, "bold")
+        ).pack(pady=12)
+        my_font = customtkinter.CTkFont(family="Roboto", size=14, weight="bold")
+        customtkinter.CTkLabel(
+            about_win,
+            text="Autor: dilmark",
+            text_color="darkgreen",
+            font=my_font,
+        ).pack()
+        customtkinter.CTkLabel(
+            about_win,
+            text=(
+                "Program na licencji GNU GPL v3\nMariusz Dyla\nmail: mariusz.dyla@dilmark.pl\ntel.: +48 602 47 47 18"
+            ),
+            font=my_font,
+        ).pack()
+        customtkinter.CTkLabel(
+            about_win,
+            text=f"Wersja: {VERSION} Gałąź: {BRANCH}",
+            font=("Roboto", 10, "italic"),
+        ).pack()
 
     def set_app_config(self):
         self.EntryORIG_PDF.insert(0, app_config.data["config_orig_path"])
@@ -373,7 +349,9 @@ class SignPdfApp:
             self.rewrite_data()
             logging.info(f"Wybrano plik do odczytu: {tekst}")
         else:
-            new_path = Path(self.file_path).with_name(Path(self.file_path).stem + "_sign.pdf")
+            new_path = Path(self.file_path).with_name(
+                Path(self.file_path).stem + "_sign.pdf"
+            )
             widget.insert(0, new_path)
             # path = Path(self.file_path)
             # new_path = path.with_name(path.stem + "_sign.pdf")
@@ -388,6 +366,11 @@ class SignPdfApp:
 
     def set_ntp(self, enabled: bool):
         value = "true" if enabled else "false"
+        if enabled:
+            self.VarNTP.set(enabled)
+            self.ButtonSetDate.grid_remove()
+            self.EntryDataSet.grid_remove()
+            self.EntryTimeSet.grid_remove()
         try:
             subprocess.run(
                 ["timedatectl", "set-ntp", value],
@@ -433,6 +416,7 @@ class SignPdfApp:
                 pdf_path=orig_pdf,
                 logo_path=self.EntryLogo.get(),
                 comment=self.EntryComment.get(),
+                cert=self.EntryCert.get(),
                 on_done=self.on_stamp_ready,
             )
             self._overlay.preview_pdf()
@@ -440,12 +424,13 @@ class SignPdfApp:
         except Exception as exc:
             msgbox.showerror("Błąd podglądu PDF", str(exc))
 
-    def on_stamp_ready(self, pdf_stamp_path, page_index, width, height, pdf_password):
+    def on_stamp_ready(self, pdf_stamp_path, page_index, width, height, pdf_password, cert_password):
         self.stamp_pdf_path = pdf_stamp_path
         self.page_index = page_index
         self.width = width
         self.height = height
         self.pdf_password = pdf_password
+        self.cert_password = cert_password
         self.sign_pdf()
 
     def sign_without_stamp(self):
@@ -472,6 +457,7 @@ class SignPdfApp:
                 height=self.height,
                 use_visual_stamp=self.use_visual_stamp,
                 pdf_password=self.pdf_password,
+                cert_password=self.cert_password,
                 on_done=lambda result_pdf: setattr(self, "result_pdf", result_pdf),
             )
             self._overlay.sign()

@@ -38,6 +38,7 @@ class PdfSigner:
         height,
         use_visual_stamp,
         pdf_password,
+        cert_password,
         on_done=None,
     ):
         print_info("Prubuję utworzyć plik z elektronicznym podpisem")
@@ -54,6 +55,7 @@ class PdfSigner:
         self.height = height
         self._sign_with_stamp = use_visual_stamp
         self.pdf_password = pdf_password
+        self.cert_password = cert_password
         self.on_done = on_done
 
     def sign(self):
@@ -76,11 +78,14 @@ class PdfSigner:
                 "Nieprawidłowy format", "Wybrany plik nie jest certyfikatem p12."
             )
             return
-        if pkcs12_needs_password(CERT_PATH):
-            print_info(f"Certyfikat wymaga podania hasła {CERT_PATH}")
-            cert_password = get_password(self.parent, CERT_PATH, max_attempts=3)
-        else:
-            cert_password = b""
+        cert_password=self.cert_password
+        
+        if self.cert_password == b'':
+            if pkcs12_needs_password(CERT_PATH):
+                print_info(f"Certyfikat wymaga podania hasła {CERT_PATH}")
+                cert_password = get_password(self.parent, CERT_PATH, max_attempts=3)
+            else:
+                cert_password = b""
 
         #sprawdzanie pliku do podpisu gdy jesteśmy w trybie bez pieczątki
         if not self._sign_with_stamp:

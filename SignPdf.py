@@ -36,13 +36,19 @@ os.environ["XMODIFIERS"] = "@im=none"
 
 
 def main():
+    config_dir = Path("config")
+    log_file = config_dir / "SignPdf.log"
+    # Sprawdź czy katalog istnieje, ewentualnie go utwórz
+    config_dir.mkdir(parents=True, exist_ok=True)
+    # odpalamy logger
     logging.basicConfig(
-        filename="config/SignPdf.log",
+        filename=str(log_file),
         filemode="a",
         level=logging.DEBUG,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
+
     logging.info("START aplikacji")
 
     initial_pdf = None
@@ -160,6 +166,7 @@ def sign_no_gui(pdf_path: Path):
     print(f"✅ Podpisano dokument: {output_pdf}")
     subprocess.run(["xdg-open", str(output_pdf)])
     return 0
+
 
 if __name__ == "__main__":
     main()

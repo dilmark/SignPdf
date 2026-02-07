@@ -9,7 +9,6 @@ import fitz
 import tempfile
 import logging
 import tkinter as tk
-import os
 
 from pathlib import Path
 from datetime import datetime
@@ -18,15 +17,19 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas as rcanvas
 from reportlab.lib.utils import ImageReader
-from utils import msgbox
+from utils import msgbox, print_info, pkcs12_needs_password, get_password
 from tkinter import simpledialog
+from utils.paths import ROOT_DIR
+from cryptography.hazmat.primitives.serialization import pkcs12
+from cryptography import x509
+from cryptography.x509.oid import NameOID
 
 # logger modułu
 logger = logging.getLogger(__name__)
 
 
 class PdfStampPreview:
-    def __init__(self, parent, pdf_path, logo_path, comment, on_done=None):
+    def __init__(self, parent, pdf_path, logo_path, comment, cert, on_done=None):
         logger.debug("Tworzę plik z graficznym podpisem i tekstem")
 
         self.parent = parent
@@ -34,6 +37,7 @@ class PdfStampPreview:
         self.logo_path = logo_path
         self.comment = comment
         self.pdf_password = None
+        self.cert = Path(cert)
         self.on_done = on_done
 
         self.doc = None
@@ -49,14 +53,6 @@ class PdfStampPreview:
         self.sign_y = None
         self.width = 0
         self.height = 0
-
-    def resource_path(self, relative_path):
-        """Metoda klasy do obsługi ścieżek w Nuitka"""
-        # __file__ to ui/app_window.py, więc dirname to folder ui/
-        current_dir = os.path.dirname(__file__)
-        # Wychodzimy poziom wyżej do głównego katalogu
-        base_path = os.path.abspath(os.path.join(current_dir, ".."))
-        return os.path.join(base_path, relative_path)
 
     def preview_pdf(self):
         # sprawdzenie śceżki pliku
@@ -89,18 +85,18 @@ class PdfStampPreview:
                 raise ValueError("Ten dokument jest chroniony przed zmianami.")
             authenticated = False
             attemp = 0
-            while not authenticated and attemp<3:
+            while not authenticated and attemp < 3:
                 self.pdf_password = simpledialog.askstring(
-                    f"Próba {attemp+1} z 3", 
-                    "Podaj hasło do pliku PDF:", 
-                    show='*', 
-                    parent=self.parent
+                    f"Próba {attemp + 1} z 3",
+                    "Podaj hasło do pliku PDF:",
+                    show="*",
+                    parent=self.parent,
                 )
-                
-                if self.pdf_password is None: # Użytkownik kliknął Anuluj
+
+                if self.pdf_password is None:  # Użytkownik kliknął Anuluj
                     self.doc.close()
                     return
-                
+
                 if self.doc.authenticate(self.pdf_password):
                     authenticated = True
                 else:
@@ -227,10 +223,36 @@ class PdfStampPreview:
                 "Nieprawidłowy format", "Wybrany obraz popdisu nie jest dokumentem png."
             )
             return
-        text = "Podpisano: Mariusz Dyla"
+        try:
+            CERT_PATH = Path(self.cert)
+            if pkcs12_needs_password(CERT_PATH):
+                print_info(f"Certyfikat wymaga podania hasła {CERT_PATH}")
+                cert_password = get_password(self.parent, CERT_PATH, max_attempts=3)
+            else:
+                cert_password = b""
+
+            with open(CERT_PATH, "rb") as f:
+                p12_data = f.read()
+
+            private_key, certificate, additional_certs = (
+                pkcs12.load_key_and_certificates(p12_data, cert_password)
+            )
+            # Pobranie informacji o podmiocie (Subject)
+            subject = certificate.subject
+
+            # CN to zazwyczaj Imię i Nazwisko lub nazwa firmy
+            common_name = subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+        except Exception as exc:
+            msgbox.showerror(
+                "Certyfikat PKCS#12 (*.p12)",
+                f"Nie można odczytać certyfikatu. Szczegóły:\n{exc}",
+            )
+
+        text = f"Podpisano: {common_name}"
         textData = f"dnia: {data}"
         textReason = self.comment or ""
-        pdfmetrics.registerFont(TTFont("Roboto", self.resource_path("utils/Roboto-MediumItalic.ttf")))
+        ttf_file = ROOT_DIR / "utils/Roboto-MediumItalic.ttf"
+        pdfmetrics.registerFont(TTFont("Roboto", ttf_file))
 
         # Rozmiar strony PDF
         page = self.doc[self.coordinations["page"]]
@@ -277,5 +299,11 @@ class PdfStampPreview:
         )
         # zapamiętujemy ścieżkę do dalszego podpisu
         if self.on_done:
-            self.on_done(pdf_stamp_path, self.page_index, self.width, self.height, self.pdf_password)
-
+            self.on_done(
+                pdf_stamp_path,
+                self.page_index,
+                self.width,
+                self.height,
+                self.pdf_password,
+                cert_password,
+            )
