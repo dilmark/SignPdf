@@ -1,0 +1,86 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "SignPdf GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/SignPdf.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONUNBUFFERED": "1",
+                "PYTHONDONTWRITEBYTECODE": "1"
+            },
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python3"
+        },
+        {
+            "name": "SignPdf CLI with PDF argument",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/SignPdf.py",
+            "args": [
+                "/home/mariusz/Dokumenty/tmp/w_pass.pdf",
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONUNBUFFERED": "1",
+                "PYTHONDONTWRITEBYTECODE": "1"
+            },
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python3"
+        },
+        {
+            "name": "SignPdf CLI with PDF argument and no GUI",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/SignPdf.py",
+            "args": [
+                "/home/mariusz/Dokumenty/tmp/w_pass.pdf",
+                "-c"
+            ],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONUNBUFFERED": "1",
+                "PYTHONDONTWRITEBYTECODE": "1"
+            },
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python3"
+        },
+        {
+            "name": "SignPdf Debug Password Dialog",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/utils/get_passwd.py",
+            "console": "integratedTerminal",
+            "args": [],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONUNBUFFERED": "1",
+                "PYTHONDONTWRITEBYTECODE": "1"
+            },
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}",
+            "python": "${workspaceFolder}/.venv/bin/python3"
+        },
+        {
+            "name": "Python: SignPdf",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/SignPdf.py",
+            // "args": ["/home/mariusz/Dokumenty/tmp/w.pdf", "-c"],
+            // "args": ["/home/mariusz/Dokumenty/tmp/w.pdf"],
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONUNBUFFERED": "1",
+                "PYTHONDONTWRITEBYTECODE": "1"
+            }
+        }
+    ]
+}
