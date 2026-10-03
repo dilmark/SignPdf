@@ -53,6 +53,8 @@ class SignPdfApp:
         self.page_index = 0
         self.height = 0
         self.width = 0
+        self.pdf_password = None
+        self.cert_password = None
 
         # tworzenie GUI
         self._create_widgets()
